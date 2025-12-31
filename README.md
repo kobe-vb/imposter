@@ -1,23 +1,25 @@
-# 🎭 De Blinde Impostor
+# Multiplayer Game (React + FastAPI)
 
-**Beschrijving**  
-De Blinde Impostor is een multiplayer party game web-app. Een centrale host (computer) beheert alle spelers, rollen en opdrachten, terwijl spelers via hun telefoons verbinding maken voor snelle en interactieve gameplay. Het spel ondersteunt 20+ spelers en verdeelt de interactie over meerdere telefoons om het spel sneller en overzichtelijker te maken.
-
-## Features
-- Rollen en opdrachten worden door de host toegewezen
-- Spelers verbinden via een QR-code of gamecode
-- Telefoons tonen enkel de relevante informatie voor elke speler
-- Handicaps en opdrachten worden realtime gesynchroniseerd
-- Host bepaalt ronde-flow en wincondities
+## Beschrijving
+Multiplayer spel waarbij een host een spel start en spelers via hun gsm op hun naam tikken om info te krijgen. Alles gebeurt via REST API, pull-based, zonder WebSockets. Host bepaalt alle fases: rollen, opdrachten, dood, enz.
 
 ## Technische stack
-- Frontend: React.js (Host en Speler UI)
-- Backend: Node.js + Express
-- Realtime communicatie: Socket.IO
-- Optioneel: Database (MongoDB/Firebase) voor persistente game-state
+- **Frontend:** React (Host UI + Mobile UI)
+- **Backend:** FastAPI (REST API)
+- **Database / Storage:** In-memory of DB voor spelstatus
+- **QR-code:** Voor spelers om game te joinen via `game_id`
 
-## Installatie
-1. Clone de repository:
-   ```bash
-   git clone https://github.com/username/blinde-impostor.git
-   cd blinde-impostor
+## Flow
+1. Host maakt spel aan met spelerslijst en instellingen → server genereert `game_id`.
+2. Host toont QR-code.
+3. GSM scant QR → krijgt spelerslijst.
+4. Host start fase (`role`, `task`, `dead`, …).
+5. Speler tikt op eigen naam → REST GET naar server → krijgt persoonlijke info.
+6. Host kan spelers doden of fase veranderen via REST POST.
+
+## REST Endpoints (kort)
+- `POST /game` → maak spel aan
+- `GET /game/{game_id}` → spelerslijst + fase
+- `POST /game/{game_id}/phase` → start/zet fase
+- `GET /game/{game_id}/player/{player_name}` → info voor speler
+- `POST /game/{game_id}/kill` → speler dood
