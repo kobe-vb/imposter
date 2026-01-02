@@ -38,3 +38,11 @@ def get_game_tasks(code: str):
 @router.get("/{code}/player/{player}/info", response_model=Player)
 def get_player(code: str, player: str):
     return games.get_game(code).get_player(player)
+
+@router.delete("/{code}/player/{player}/kill", response_model=list[Player])
+def kill_player(code: str, player: str):
+    return games.get_game(code).kill_player(player)
+
+@router.post("/{code}/player/{player}/revive", response_model=list[Player])
+def revive_player(code: str, player: str):
+    return games.get_game(code).revive_player(player)

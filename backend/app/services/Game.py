@@ -34,6 +34,18 @@ class Game:
     
     def get_player(self, name: str) -> Player:
         return [player for player in self.players if player.name == name][0]
+    
+    def _set_player_live(self, name: str, alive: bool) -> list[Player]:
+        for player in self.players:
+            if player.name == name:
+                player.alive = alive
+        return self.players
+    
+    def kill_player(self, name: str) -> list[Player]:
+        return self._set_player_live(name, False)
+    
+    def revive_player(self, name: str) -> list[Player]:
+        return self._set_player_live(name, True)
                 
     def is_inactive(self, threshold_minutes: int = 30) -> bool:
         return (datetime.datetime.now() - self.last_active).total_seconds() > threshold_minutes * 60
