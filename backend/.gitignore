@@ -1,0 +1,49 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtuele omgeving
+venv/
+.env/
+.env.*   # Als je meerdere omgevingen hebt
+
+# Logs
+*.log
+logs/
+
+# Database bestanden (SQLite of andere tijdelijke DB's)
+*.db
+*.sqlite3
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Cache / temp files
+*.tmp
+*.bak
+*.swp
+
+# Coverage reports
+htmlcov/
+.coverage
+
+# Pipenv / Poetry
+Pipfile.lock
+poetry.lock
+
+# FastAPI / Uvicorn specific
+__pycache__/
+*.pyo
+*.pyd
+
+# Misc
+.DS_Store
+
+
+.env
+
+uploads/
