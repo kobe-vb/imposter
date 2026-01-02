@@ -9,6 +9,10 @@ export type Player = {
 
 export type GameSettings = {
   imposters: number;
+  taskTemplate: string;
+  taskTime: number;
+  infoDisplayTime: number;
+  tasksPerRound: number;
 };
 
 export type TasksResponse = {

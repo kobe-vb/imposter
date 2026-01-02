@@ -26,6 +26,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+
   del: <T>(path: string) =>
     apiRequest<T>(path, {
       method: "DELETE",

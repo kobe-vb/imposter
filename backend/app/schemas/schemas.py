@@ -1,8 +1,6 @@
 from typing import List
 from pydantic import BaseModel, Field
 
-class PlayerName(BaseModel):
-    name: str
 
 class Player(BaseModel):
     name: str
@@ -10,12 +8,14 @@ class Player(BaseModel):
     role: str | None
     task: str | None
 
-type PlayerNames = str
+type PlayerName = str
     
 class GameSettings(BaseModel):
     imposters: int
-    
-    
+    taskTemplate: str
+    taskTime: int
+    infoDisplayTime: int
+    tasksPerRound: int
     
 class CreateGameRequest(BaseModel):
     players: List[PlayerName]
@@ -26,3 +26,9 @@ class CreateGameResponse(BaseModel):
 
 class GetGameCodeResponse(BaseModel):
     success: bool
+
+class TaskRequest(BaseModel):
+    task: str
+
+class ReviveRequest(BaseModel):
+    name: PlayerName

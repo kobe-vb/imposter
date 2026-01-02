@@ -48,9 +48,9 @@ export default function HostPage() {
     }
   };
 
-  const revivePlayer = async (name: string) => {
+  const revivePlayer = async (player: string) => {
     try {
-      const updated: Player[] = await api.post(`/game/${gameCode}/player/${name}/revive`, name);
+      const updated: Player[] = await api.post(`/game/${gameCode}/player/revive`, { name: player });
       setPlayers(updated);
     } catch (error) {
       console.error('Error reviving player:', error);
@@ -73,7 +73,7 @@ export default function HostPage() {
     if (!newTask.trim()) return;
 
     try {
-      api.post(`/game/${gameCode}/tasks`, newTask);
+      await api.post(`/game/${gameCode}/task`, { task: newTask });
       setAvailableTasks([...availableTasks, newTask]);
       setNewTask("");
     } catch (error) {
@@ -83,7 +83,7 @@ export default function HostPage() {
 
   const deleteTask = async (task: string) => {
     try {
-      api.del(`/game/${gameCode}/tasks/${task}`);
+      await api.del(`/game/${gameCode}/task/${encodeURIComponent(task)}`);
       setAvailableTasks(availableTasks.filter(t => t !== task));
     } catch (error) {
       console.error('Error deleting task:', error);
@@ -94,25 +94,17 @@ export default function HostPage() {
     if (!customTask.trim()) return;
 
     try {
-      api.post(`/game/${gameCode}/player/${playerName}/task`, customTask);
-      const updated = players.map(p =>
-        p.name === playerName ? { ...p, task: customTask } : p
-      );
+      const updated: Player[] = await api.post(`/game/${gameCode}/player/${playerName}/task`, { task: customTask });
       setPlayers(updated);
       setEditingPlayer(null);
       setCustomTask("");
     } catch (error) {
       console.error('Error assigning task:', error);
+    } finally {
+      setEditingPlayer(null);
+      setCustomTask("");
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-white text-2xl">Laden...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
@@ -192,9 +184,10 @@ export default function HostPage() {
         <div className="bg-slate-800/50 backdrop-blur border border-purple-500/20 rounded-lg p-4">
           <button
             onClick={newRound}
+            disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg rounded-lg font-semibold transition-colors"
           >
-            🔄 Nieuwe Ronde
+            {loading ? 'Laden...' : 'Nieuwe Ronde'}
           </button>
         </div>
 

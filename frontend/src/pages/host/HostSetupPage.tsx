@@ -13,27 +13,31 @@ export default function HostSetupPage() {
     const navigate = useNavigate();
 
     const [players, setPlayers] = useState<PlayerName[]>([]);
-    const [newPlayer, setNewPlayer] = useState<PlayerName>({ name: "" });
+    const [newPlayer, setNewPlayer] = useState<PlayerName>("");
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>("");
 
     const [settings, setSettings] = useState<GameSettings>({
         imposters: 2,
+        taskTemplate: "leden",
+        taskTime: 5,
+        infoDisplayTime: 5,
+        tasksPerRound: 2
     });
 
     const addPlayer = () => {
-        if (!newPlayer.name.trim()) return;
-        if (players.find(p => p.name === newPlayer.name)) {
+        if (!newPlayer.trim()) return;
+        if (players.find(p => p === newPlayer)) {
             setError('Speler bestaat al');
             return;
         }
         setPlayers([newPlayer, ...players]);
-        setNewPlayer({ name: "" });
+        setNewPlayer("");
         setError('');
     };
 
     const removePlayer = (name: String) => {
-        setPlayers(players.filter(p => p.name !== name));
+        setPlayers(players.filter(p => p !== name));
     };
 
 
@@ -73,8 +77,8 @@ export default function HostSetupPage() {
                                 <div className="flex gap-2 mb-4">
                                     <Input
                                         placeholder="Naam"
-                                        value={newPlayer.name}
-                                        onChange={(e) => setNewPlayer({ name: e.target.value })}
+                                        value={newPlayer}
+                                        onChange={(e) => setNewPlayer(e.target.value as PlayerName)}
                                         onKeyDown={(e) => e.key === 'Enter' && addPlayer()}
                                         className="bg-slate-900/50 border-purple-500/30 text-white"
                                     />
@@ -85,10 +89,10 @@ export default function HostSetupPage() {
 
                                 <div className="space-y-2 max-h-64 overflow-y-auto">
                                     {players.map((player) => (
-                                        <div key={player.name} className="flex items-center justify-between bg-slate-900/50 p-3 rounded">
-                                            <span className="text-white font-medium">{player.name}</span>
+                                        <div key={player} className="flex items-center justify-between bg-slate-900/50 p-3 rounded">
+                                            <span className="text-white font-medium">{player}</span>
                                             <Button
-                                                onClick={() => removePlayer(player.name)}
+                                                onClick={() => removePlayer(player)}
                                                 variant="ghost"
                                                 size="sm"
                                                 className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
@@ -104,15 +108,6 @@ export default function HostSetupPage() {
                             <div>
                                 <h3 className="text-xl font-bold text-white mb-4">Instellingen</h3>
                                 <div className="space-y-4">
-                                    {/* <div>
-                                        <label className="text-slate-300 text-sm">Spel duur (minuten)</label>
-                                        <Input
-                                            type="number"
-                                            value={settings.gameDuration}
-                                            onChange={(e) => setSettings({ ...settings, gameDuration: parseInt(e.target.value) })}
-                                            className="bg-slate-900/50 border-purple-500/30 text-white"
-                                        />
-                                    </div> */}
 
                                     <div>
                                         <label className="text-slate-300 text-sm">Aantal imposters</label>
@@ -124,8 +119,8 @@ export default function HostSetupPage() {
                                         />
                                     </div>
 
-                                    {/* <div>
-                                        <label className="text-slate-300 text-sm">Task tijd (seconden)</label>
+                                    <div>
+                                        <label className="text-slate-300 text-sm">Task tijd (minuten)</label>
                                         <Input
                                             type="number"
                                             value={settings.taskTime}
@@ -135,14 +130,29 @@ export default function HostSetupPage() {
                                     </div>
 
                                     <div>
-                                        <label className="text-slate-300 text-sm">Info display tijd (seconden)</label>
+                                        <label className="text-slate-300 text-sm">number of tasks per round</label>
                                         <Input
                                             type="number"
-                                            value={settings.infoDisplayTime}
-                                            onChange={(e) => setSettings({ ...settings, infoDisplayTime: parseInt(e.target.value) })}
+                                            value={settings.tasksPerRound}
+                                            onChange={(e) => setSettings({ ...settings, tasksPerRound: parseInt(e.target.value) })}
                                             className="bg-slate-900/50 border-purple-500/30 text-white"
                                         />
-                                    </div> */}
+                                    </div>
+
+                                    <div>
+                                        <label className="text-slate-300 text-sm">Task Template</label>
+                                        <select
+                                            value={settings.taskTemplate}
+                                            onChange={(e) =>
+                                                setSettings({ ...settings, taskTemplate: e.target.value })
+                                            }
+                                            className="bg-slate-900/50 border-purple-500/30 text-white p-2 rounded"
+                                        >
+                                            <option value="leden">leden</option>
+                                            <option value="leiding">leiding</option>
+                                        </select>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
