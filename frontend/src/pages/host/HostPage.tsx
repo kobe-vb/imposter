@@ -1,24 +1,23 @@
 import { useState, useEffect } from 'react';
-import { Home, Skull, Target, Plus, Trash2, X } from 'lucide-react';
+import { Home, Skull, Plus, X } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import type { Player } from '@/types/types';
 import { api } from '@/api/api';
-
-
+import PlayersWithTasksDisplay from '@/components/PlayersWithTasksDisplay';
+import TaskManager from '@/components/TaskManager';
 
 export default function HostPage() {
   const { gameCode } = useParams();
   const [players, setPlayers] = useState<Player[]>([]);
   const [availableTasks, setAvailableTasks] = useState<string[]>([]);
+  const [availableHandicaps, setAvailableHandicaps] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [newTask, setNewTask] = useState<string>("");
   const [editingPlayer, setEditingPlayer] = useState<string | null>(null);
   const [customTask, setCustomTask] = useState<string>("");
 
   const alivePlayers = players.filter(p => p.alive).length;
   const deadPlayers = players.filter(p => !p.alive).length;
   const mafia = players.filter(p => p.role === 'imposter' && p.alive).length;
-  const playersWithTasks = players.filter(p => p.task && p.alive);
 
   useEffect(() => {
     fetchInitialData();
@@ -29,9 +28,11 @@ export default function HostPage() {
     try {
       const players: Player[] = await api.get(`/game/${gameCode}/players`);
       const tasks: string[] = await api.get(`/game/${gameCode}/tasks`);
+      const handicaps: string[] = await api.get(`/game/${gameCode}/handicaps`);
 
       setPlayers(players);
       setAvailableTasks(tasks);
+      setAvailableHandicaps(handicaps);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -69,13 +70,10 @@ export default function HostPage() {
     }
   };
 
-  const addTask = async () => {
-    if (!newTask.trim()) return;
-
+  const addTask = async (task: string) => {
     try {
-      await api.post(`/game/${gameCode}/task`, { task: newTask });
-      setAvailableTasks([...availableTasks, newTask]);
-      setNewTask("");
+      await api.post(`/game/${gameCode}/task`, { task });
+      setAvailableTasks([...availableTasks, task]);
     } catch (error) {
       console.error('Error adding task:', error);
     }
@@ -87,6 +85,24 @@ export default function HostPage() {
       setAvailableTasks(availableTasks.filter(t => t !== task));
     } catch (error) {
       console.error('Error deleting task:', error);
+    }
+  };
+
+  const addHandicap = async (handicap: string) => {
+    try {
+      await api.post(`/game/${gameCode}/handicap`, { task: handicap });
+      setAvailableHandicaps([...availableHandicaps, handicap]);
+    } catch (error) {
+      console.error('Error adding handicap:', error);
+    }
+  };
+
+  const deleteHandicap = async (handicap: string) => {
+    try {
+      await api.del(`/game/${gameCode}/handicap/${encodeURIComponent(handicap)}`);
+      setAvailableHandicaps(availableHandicaps.filter(h => h !== handicap));
+    } catch (error) {
+      console.error('Error deleting handicap:', error);
     }
   };
 
@@ -136,49 +152,26 @@ export default function HostPage() {
         </div>
 
         {/* Beschikbare Taken */}
-        <div className="bg-slate-800/50 backdrop-blur border border-blue-500/20 rounded-lg">
-          <div className="p-6 border-b border-slate-700">
-            <h3 className="text-xl font-bold text-blue-400 flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              Beschikbare Taken
-            </h3>
-          </div>
-          <div className="p-6">
-            <div className="flex gap-2 mb-4">
-              <input
-                type="text"
-                value={newTask}
-                onChange={(e) => setNewTask(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addTask()}
-                placeholder="Nieuwe taak toevoegen..."
-                className="flex-1 bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
-              />
-              <button
-                onClick={addTask}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Toevoegen
-              </button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {availableTasks.map((task, index) => (
-                <div
-                  key={index}
-                  className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 flex items-center justify-between"
-                >
-                  <span className="text-white text-sm">{task}</span>
-                  <button
-                    onClick={() => deleteTask(task)}
-                    className="text-red-400 hover:text-red-300 transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <TaskManager
+          title="Beschikbare Taken"
+          items={availableTasks}
+          onAdd={addTask}
+          onDelete={deleteTask}
+          placeholder="Nieuwe taak toevoegen..."
+          borderColor="border-blue-500/20"
+          titleColor="text-blue-400"
+        />
+
+        {/* Beschikbare Handicaps */}
+        <TaskManager
+          title="Beschikbare Handicaps"
+          items={availableHandicaps}
+          onAdd={addHandicap}
+          onDelete={deleteHandicap}
+          placeholder="Nieuwe handicap toevoegen..."
+          borderColor="border-red-500/20"
+          titleColor="text-red-400"
+        />
 
         {/* New Round Button */}
         <div className="bg-slate-800/50 backdrop-blur border border-purple-500/20 rounded-lg p-4">
@@ -191,37 +184,33 @@ export default function HostPage() {
           </button>
         </div>
 
-        {/* Spelers met Taken */}
-        {playersWithTasks.length > 0 && (
-          <div className="bg-slate-800/50 backdrop-blur border border-yellow-500/20 rounded-lg">
-            <div className="p-6 border-b border-slate-700">
-              <h3 className="text-xl font-bold text-yellow-400 flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Taken Deze Ronde
-              </h3>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {playersWithTasks.map((player) => (
-                  <div
-                    key={player.name}
-                    className="bg-slate-900/70 border border-yellow-500/30 rounded-lg p-4"
-                  >
-                    <div className="mb-3">
-                      <p className="text-lg font-bold text-white">{player.name}</p>
-                      <p className="text-sm text-yellow-400 font-semibold">{player.role || 'burger'}</p>
-                    </div>
-                    <div className="bg-yellow-900/20 p-3 rounded border border-yellow-500/20">
-                      <p className="text-sm text-yellow-200">
-                        <span className="font-semibold">Taak:</span> {player.task}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Taken Deze Ronde - Levende Spelers */}
+        <PlayersWithTasksDisplay
+          players={players}
+          title="Taken Deze Ronde"
+          icon="target"
+          showAlive={true}
+          borderColor="border-yellow-500/20"
+          titleColor="text-yellow-400"
+          cardBorderColor="border-yellow-500/30"
+          taskBgColor="bg-yellow-900/20"
+          taskBorderColor="border-yellow-500/20"
+          taskTextColor="text-yellow-200"
+        />
+
+        {/* Handicaps - Dode Spelers */}
+        <PlayersWithTasksDisplay
+          players={players}
+          title="Handicaps Dode Spelers"
+          icon="skull"
+          showAlive={false}
+          borderColor="border-red-500/20"
+          titleColor="text-red-400"
+          cardBorderColor="border-red-500/30"
+          taskBgColor="bg-red-900/20"
+          taskBorderColor="border-red-500/20"
+          taskTextColor="text-red-200"
+        />
 
         {/* Alle Spelers */}
         <div className="bg-slate-800/50 backdrop-blur border border-purple-500/20 rounded-lg">
@@ -233,14 +222,18 @@ export default function HostPage() {
               {players.map((player) => (
                 <div
                   key={player.name}
-                  className={`border rounded-lg p-4 ${player.alive
+                  className={`border rounded-lg p-4 ${
+                    player.alive
                       ? 'bg-slate-900/50 border-slate-700'
                       : 'bg-gray-800/30 border-gray-700'
-                    }`}
+                  }`}
                 >
                   <div className="mb-3">
-                    <p className={`text-base font-bold truncate ${player.alive ? 'text-white' : 'text-gray-500 line-through'
-                      }`}>
+                    <p
+                      className={`text-base font-bold truncate ${
+                        player.alive ? 'text-white' : 'text-gray-500 line-through'
+                      }`}
+                    >
                       {player.name}
                     </p>
                     <p className="text-xs text-slate-400 truncate">
@@ -314,7 +307,7 @@ export default function HostPage() {
 
         {/* Home Button */}
         <button
-          onClick={() => window.location.href = '/'}
+          onClick={() => (window.location.href = '/')}
           className="w-full bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
         >
           <Home className="h-5 w-5" />

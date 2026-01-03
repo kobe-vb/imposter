@@ -43,6 +43,18 @@ def remove_task(code: str, task: str):
 def add_task(code: str, request: TaskRequest):
     return games.get_game(code).tasks.add_task(request.task)
 
+@router.get("/{code}/handicaps", response_model=list[str])
+def get_game_handicaps(code: str):
+    return games.get_game(code).handicap.get_list()
+
+@router.delete("/{code}/handicap/{handicap}", response_model=list[str])
+def remove_handicap(code: str, handicap: str):
+    return games.get_game(code).handicap.remove_task(handicap)
+
+@router.post("/{code}/handicap", response_model=list[str])
+def add_handicap(code: str, request: TaskRequest):
+    return games.get_game(code).handicap.add_task(request.task)
+
 @router.post("/{code}/player/{player}/task", response_model=list[Player])
 def set_player_task(code: str, player: PlayerName, request: TaskRequest):
     return games.get_game(code).set_player_task(player, request.task)

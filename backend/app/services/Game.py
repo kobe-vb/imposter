@@ -22,12 +22,12 @@ class Game:
         self.players = sorted(self.players, key=lambda player: player.role is not None, reverse=True)    
         
         self.settings: GameSettings = settings
-        self.tasks: Tasks = Tasks(settings.taskTemplate)
+        self.tasks: Tasks = Tasks(self.players, settings.taskTemplate)
+        self.handicap: Tasks = Tasks(self.players, settings.taskTemplate, "handicaps")
         
         self.current_round: int = 0
                 
         self.last_active: datetime = datetime.datetime.now()  
-    
     def get_players_names(self) -> list[PlayerName]:
         names = [player.name for player in self.players]
         random.shuffle(names)
@@ -40,6 +40,10 @@ class Game:
         for player in self.players:
             if player.name == name:
                 player.alive = alive
+                if player.alive:
+                    player.task = None
+                else:
+                    player.task = self.handicap.get_random_task()
         return self.players
     
     def kill_player(self, name: str) -> list[Player]:
@@ -57,13 +61,16 @@ class Game:
     def new_round(self) -> list[Player]:
         self.current_round += 1
 
-        alive_players = [p for p in self.players if p.alive]
-
-        for player in alive_players:
+        alive_non_imposters = [
+            p for p in self.players 
+            if p.alive and p.role != "imposter"
+        ]
+        
+        for player in alive_non_imposters:
             player.task = None
 
-        num_tasks = min(self.settings.tasksPerRound, len(alive_players))
-        chosen_players = random.sample(alive_players, num_tasks)
+        num_tasks = min(self.settings.tasksPerRound, len(alive_non_imposters))
+        chosen_players = random.sample(alive_non_imposters, num_tasks)
 
         for player in chosen_players:
             player.task = self.tasks.get_random_task()

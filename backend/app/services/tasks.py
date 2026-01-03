@@ -2,18 +2,23 @@ import random
 
 from pathlib import Path
 
+from app.schemas.schemas import Player
+
 class Tasks:
     
-    def __init__(self, template: str):
-        self.tasks: list[str] = []
+    def __init__(self, players: list[Player], template: str, base_path: str = "tasks"):
+        self.players: list[Player] = players
+        self.base_path: str = base_path
         self.template: str = template
+        
+        self.tasks: list[str] = []
         self.load_template()
     
     def get_list(self) -> list[str]:
         return self.tasks
     
     def get_path(self) -> Path:
-        return Path("tasks") / f"{self.template}.txt"
+        return Path(self.base_path) / f"{self.template}.txt"
     
     def load_template(self):
         
@@ -25,8 +30,14 @@ class Tasks:
         with open(path, "r") as f:
             self.tasks = f.read().splitlines()
     
+    def personalize_tasks(self, task: str) -> str:
+        # ?
+        return task
+    
     def get_random_task(self) -> str:
-        return random.choice(self.tasks)
+        if len(self.tasks) == 0:
+            return "geen opdrachten gevonden"
+        return self.personalize_tasks(random.choice(self.tasks))
 
     def remove_task(self, task: str) -> list[str]:
         self.tasks.remove(task)

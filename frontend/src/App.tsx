@@ -2,7 +2,6 @@ import './App.css';
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
-import AllPage from './pages/AllPage';
 import PlayerSetupPage from './pages/player/PayerSetupPage';
 import PlayerPage from './pages/player/PlayerPage';
 import { PlayerProvider } from './context/PlayerContext';
@@ -18,7 +17,6 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/all" element={<AllPage />} />
 
         <Route path="/host/welcome" element={<HostWelcomePage />} />
         <Route path="/host/join" element={<HostJoinPage />} />
