@@ -11,7 +11,8 @@ def create_game(payload: CreateGameRequest):
     try:
         code = games.create_game(
             payload.players,
-            payload.settings
+            payload.settings,
+            payload.roles
         )
     except ValueError as e:
         raise HTTPException(

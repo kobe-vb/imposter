@@ -11,16 +11,20 @@ class Player(BaseModel):
 type PlayerName = str
     
 class GameSettings(BaseModel):
-    imposters: int
     taskTemplate: str
     taskTime: int
     infoDisplayTime: int
     tasksPerRound: int
+
+class RoleInfo(BaseModel):
+    name: str
+    count: int
     
 class CreateGameRequest(BaseModel):
     players: List[PlayerName]
     settings: GameSettings
-
+    roles: List[RoleInfo]
+ 
 class CreateGameResponse(BaseModel):
     code: str
 

@@ -2,25 +2,23 @@ import datetime
 import random
 from fastapi import APIRouter
 
-from app.schemas.schemas import GameSettings, Player, PlayerName
+from app.schemas.schemas import GameSettings, Player, PlayerName, RoleInfo
 from app.services.tasks import Tasks
 
 router = APIRouter()
 
 class Game:
-    def __init__(self, code: str, players: list[PlayerName], settings: GameSettings):
+    def __init__(self, code: str, players: list[PlayerName], settings: GameSettings, roles: list[RoleInfo]):
         self.code = code
         
-        self.players: list[Player] = [Player(name=player, alive=True, role=None, task=None) for player in players]
-        for _ in range(settings.imposters):
-            i: int = random.randint(0, len(self.players) - 1)
-            while self.players[i].role == "imposter":
-                i = random.randint(0, len(self.players) - 1)
-            self.players[i].role = "imposter"
-        
-        # sort players so that players with roles are first
-        self.players = sorted(self.players, key=lambda player: player.role is not None, reverse=True)    
-        
+        print(roles)
+        self.players: list[Player] = [Player(name=player, alive=True) for player in players]
+
+        self.assign_roles(roles)        
+        self.players = sorted(
+            self.players, 
+            key=lambda player: (player.role is None, player.role)
+        )        
         self.settings: GameSettings = settings
         self.tasks: Tasks = Tasks(self.players, settings.taskTemplate)
         self.handicap: Tasks = Tasks(self.players, settings.taskTemplate, "handicaps")
@@ -29,6 +27,16 @@ class Game:
                 
         self.last_active: datetime = datetime.datetime.now()  
         
+    def assign_roles(self, roles: list[RoleInfo]):
+        
+        all_indices = list(range(len(self.players)))
+        for role in roles:
+            for _ in range(role.count):
+                if not all_indices:
+                    break
+                chosen_index = random.choice(all_indices)
+                self.players[chosen_index].role = role.name
+                all_indices.remove(chosen_index)
         
     def get_players_names(self) -> list[PlayerName]:
         names = [player.name for player in self.players]

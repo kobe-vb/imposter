@@ -3,13 +3,15 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import type { CreateGameResponse, GameSettings, PlayerName } from "@/types/types";
-import { Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import type { CreateGameResponse, GameSettings, PlayerName, Role } from "@/types/types";
+import { Plus, Trash2, Move } from "lucide-react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import type { DropResult } from "@hello-pangea/dnd";
+
 
 export default function HostSetupPage() {
-
     const navigate = useNavigate();
 
     const [players, setPlayers] = useState<PlayerName[]>([]);
@@ -18,28 +20,56 @@ export default function HostSetupPage() {
     const [error, setError] = useState<string>("");
 
     const [settings, setSettings] = useState<GameSettings>({
-        imposters: 2,
         taskTemplate: "leden",
         taskTime: 5,
         infoDisplayTime: 5,
-        tasksPerRound: 2
+        tasksPerRound: 2,
     });
+
+    const [roles, setRoles] = useState<Role[]>([
+        { name: "imposter", count: 3 },
+        { name: "cupido", count: 1 },
+        { name: "heilend mijske", count: 1 },
+    ]);
+    const [newRoleName, setNewRoleName] = useState<string>("");
+    const [newRoleCount, setNewRoleCount] = useState<number>(1);
+
+    const roleNameInputRef = useRef<HTMLInputElement>(null);
 
     const addPlayer = () => {
         if (!newPlayer.trim()) return;
-        if (players.find(p => p === newPlayer)) {
-            setError('Speler bestaat al');
+        if (players.find((p) => p === newPlayer)) {
+            setError("Speler bestaat al");
             return;
         }
         setPlayers([newPlayer, ...players]);
         setNewPlayer("");
-        setError('');
+        setError("");
     };
 
-    const removePlayer = (name: String) => {
-        setPlayers(players.filter(p => p !== name));
+    const removePlayer = (name: string) => {
+        setPlayers(players.filter((p) => p !== name));
     };
 
+    const addRole = () => {
+        if (!newRoleName.trim()) return;
+        setRoles([...roles, { name: newRoleName, count: newRoleCount }]);
+        setNewRoleName("");
+        setNewRoleCount(1);
+        roleNameInputRef.current?.focus();
+    };
+
+    const removeRole = (index: number) => {
+        setRoles(roles.filter((_, i) => i !== index));
+    };
+
+    const onDragEnd = (result: DropResult) => {
+        if (!result.destination) return;
+        const newRoles = Array.from(roles);
+        const [removed] = newRoles.splice(result.source.index, 1);
+        newRoles.splice(result.destination.index, 0, removed);
+        setRoles(newRoles);
+    };
 
     const createGame = async () => {
         if (players.length < 3) {
@@ -52,6 +82,7 @@ export default function HostSetupPage() {
             const res = await api.post<CreateGameResponse>("/game/create", {
                 players,
                 settings,
+                roles,
             });
 
             navigate(`/host/${res.code}`);
@@ -79,7 +110,7 @@ export default function HostSetupPage() {
                                         placeholder="Naam"
                                         value={newPlayer}
                                         onChange={(e) => setNewPlayer(e.target.value as PlayerName)}
-                                        onKeyDown={(e) => e.key === 'Enter' && addPlayer()}
+                                        onKeyDown={(e) => e.key === "Enter" && addPlayer()}
                                         className="bg-slate-900/50 border-purple-500/30 text-white"
                                     />
                                     <Button onClick={addPlayer} className="bg-green-600 hover:bg-green-700">
@@ -87,7 +118,7 @@ export default function HostSetupPage() {
                                     </Button>
                                 </div>
 
-                                <div className="space-y-2 max-h-64 overflow-y-auto">
+                                <div className="space-y-2 max-h-96 overflow-y-auto">
                                     {players.map((player) => (
                                         <div key={player} className="flex items-center justify-between bg-slate-900/50 p-3 rounded">
                                             <span className="text-white font-medium">{player}</span>
@@ -104,56 +135,127 @@ export default function HostSetupPage() {
                                 </div>
                             </div>
 
-                            {/* Instellingen */}
+                            {/* Roles sectie */}
                             <div>
-                                <h3 className="text-xl font-bold text-white mb-4">Instellingen</h3>
-                                <div className="space-y-4">
+                                <h3 className="text-xl font-bold text-white mb-4">Roles</h3>
 
-                                    <div>
-                                        <label className="text-slate-300 text-sm">Aantal imposters</label>
-                                        <Input
-                                            type="number"
-                                            value={settings.imposters}
-                                            onChange={(e) => setSettings({ ...settings, imposters: parseInt(e.target.value) })}
-                                            className="bg-slate-900/50 border-purple-500/30 text-white"
-                                        />
-                                    </div>
+                                <div className="mb-4">
+                                    <label className="text-slate-300 text-sm">Task Template</label>
+                                    <select
+                                        value={settings.taskTemplate}
+                                        onChange={(e) => setSettings({ ...settings, taskTemplate: e.target.value })}
+                                        className="bg-slate-900/50 border-purple-500/30 text-white p-2 rounded w-full"
+                                    >
+                                        <option value="leden">leden</option>
+                                        <option value="leiding">leiding</option>
+                                    </select>
 
-                                    <div>
-                                        <label className="text-slate-300 text-sm">Task tijd (minuten)</label>
-                                        <Input
-                                            type="number"
-                                            value={settings.taskTime}
-                                            onChange={(e) => setSettings({ ...settings, taskTime: parseInt(e.target.value) })}
-                                            className="bg-slate-900/50 border-purple-500/30 text-white"
-                                        />
-                                    </div>
+                                    <label className="text-slate-300 text-sm mt-2">Task Tijd (in minuten)</label>
+                                    <Input
+                                        type="number"
+                                        value={settings.taskTime}
+                                        min={1}
+                                        onChange={(e) => setSettings({ ...settings, taskTime: parseInt(e.target.value) })}
+                                        className="bg-slate-900/50 border-purple-500/30 text-white w-full"
+                                    />
 
-                                    <div>
-                                        <label className="text-slate-300 text-sm">number of tasks per round</label>
-                                        <Input
-                                            type="number"
-                                            value={settings.tasksPerRound}
-                                            onChange={(e) => setSettings({ ...settings, tasksPerRound: parseInt(e.target.value) })}
-                                            className="bg-slate-900/50 border-purple-500/30 text-white"
-                                        />
-                                    </div>
+                                    <label className="text-slate-300 text-sm mt-2">time to display player info (in seconds)</label>
+                                    <Input
+                                        type="number"
+                                        value={settings.infoDisplayTime}
+                                        min={1}
+                                        onChange={(e) => setSettings({ ...settings, infoDisplayTime: parseInt(e.target.value) })}
+                                        className="bg-slate-900/50 border-purple-500/30 text-white w-full"
+                                    />
 
-                                    <div>
-                                        <label className="text-slate-300 text-sm">Task Template</label>
-                                        <select
-                                            value={settings.taskTemplate}
-                                            onChange={(e) =>
-                                                setSettings({ ...settings, taskTemplate: e.target.value })
-                                            }
-                                            className="bg-slate-900/50 border-purple-500/30 text-white p-2 rounded"
-                                        >
-                                            <option value="leden">leden</option>
-                                            <option value="leiding">leiding</option>
-                                        </select>
-                                    </div>
+                                    <label className="text-slate-300 text-sm mt-2">tasks per round</label>
+                                    <Input
+                                        type="number"
+                                        value={settings.tasksPerRound}
+                                        min={1}
+                                        onChange={(e) => setSettings({ ...settings, tasksPerRound: parseInt(e.target.value) })}
+                                        className="bg-slate-900/50 border-purple-500/30 text-white w-full"
+                                    />
 
                                 </div>
+
+                                <div className="flex gap-2 mb-4">
+                                    <Input
+                                        ref={roleNameInputRef}
+                                        placeholder="Role Naam"
+                                        value={newRoleName}
+                                        onChange={(e) => setNewRoleName(e.target.value)}
+                                        onKeyDown={(e) => e.key === "Enter" && addRole()}
+                                        className="bg-slate-900/50 border-purple-500/30 text-white"
+                                    />
+                                    <Input
+                                        type="number"
+                                        value={newRoleCount}
+                                        min={1}
+                                        onChange={(e) => setNewRoleCount(parseInt(e.target.value))}
+                                        onKeyDown={(e) => e.key === "Enter" && addRole()}
+                                        className="bg-slate-900/50 border-purple-500/30 text-white w-24"
+                                    />
+                                    <Button onClick={addRole} className="bg-green-600 hover:bg-green-700">
+                                        <Plus className="h-5 w-5" />
+                                    </Button>
+                                </div>
+
+                                <DragDropContext onDragEnd={onDragEnd}>
+                                    <Droppable droppableId="roles">
+                                        {(provided) => (
+                                            <div
+                                                {...provided.droppableProps}
+                                                ref={provided.innerRef}
+                                                className="space-y-2 max-h-64 overflow-y-auto"
+                                            >
+                                                {roles.map((role, index) => (
+                                                    <Draggable key={index} draggableId={`role-${index}`} index={index}>
+                                                        {(provided) => (
+                                                            <div
+                                                                ref={provided.innerRef}
+                                                                {...provided.draggableProps}
+                                                                {...provided.dragHandleProps}
+                                                                className="flex items-center gap-2 bg-slate-900/50 p-2 rounded"
+                                                            >
+                                                                <Move className="h-5 w-5 text-purple-400 cursor-move" />
+                                                                <Input
+                                                                    value={role.name}
+                                                                    onChange={(e) => {
+                                                                        const newRoles = [...roles];
+                                                                        newRoles[index].name = e.target.value;
+                                                                        setRoles(newRoles);
+                                                                    }}
+                                                                    className="bg-slate-900/50 border-purple-500/30 text-white flex-1"
+                                                                />
+                                                                <Input
+                                                                    type="number"
+                                                                    value={role.count}
+                                                                    min={1}
+                                                                    onChange={(e) => {
+                                                                        const newRoles = [...roles];
+                                                                        newRoles[index].count = parseInt(e.target.value);
+                                                                        setRoles(newRoles);
+                                                                    }}
+                                                                    className="bg-slate-900/50 border-purple-500/30 text-white w-24"
+                                                                />
+                                                                <Button
+                                                                    onClick={() => removeRole(index)}
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        )}
+                                                    </Draggable>
+                                                ))}
+                                                {provided.placeholder}
+                                            </div>
+                                        )}
+                                    </Droppable>
+                                </DragDropContext>
                             </div>
                         </div>
 
@@ -169,12 +271,9 @@ export default function HostSetupPage() {
                                 disabled={loading}
                                 className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white text-lg py-6"
                             >
-                                {loading ? 'Aanmaken...' : 'Start Spel'}
+                                {loading ? "Aanmaken..." : "Start Spel"}
                             </Button>
-                            <Button
-                                onClick={() => navigate(`/`)}
-                                className="bg-slate-700 hover:bg-slate-600 px-8"
-                            >
+                            <Button onClick={() => navigate(`/`)} className="bg-slate-700 hover:bg-slate-600 px-8">
                                 Terug
                             </Button>
                         </div>

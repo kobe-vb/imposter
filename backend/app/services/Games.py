@@ -1,4 +1,4 @@
-from app.schemas.schemas import GameSettings, Player, PlayerName
+from app.schemas.schemas import GameSettings, Player, PlayerName, RoleInfo
 from app.services.Game import Game
 
 class Games:
@@ -19,10 +19,10 @@ class Games:
         self.number_of_games += 1
         return f"{self.number_of_games - 1:03d}"
 
-    def create_game(self, players: list[PlayerName], settings: GameSettings):
+    def create_game(self, players: list[PlayerName], settings: GameSettings, roles: list[RoleInfo]) -> str:
         self.clean_inactive_games()
         code = self._generate_game_code()
-        game = Game(code, players, settings)
+        game = Game(code, players, settings, roles)
         self.games[code] = game
         return code
     

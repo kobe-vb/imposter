@@ -7,8 +7,9 @@ export type Player = {
   task?: string;
 };
 
+export type Role = { name: string; count: number };
+
 export type GameSettings = {
-  imposters: number;
   taskTemplate: string;
   taskTime: number;
   infoDisplayTime: number;
