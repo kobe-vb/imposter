@@ -32,7 +32,7 @@ class AssignTaskRequest(BaseModel):
 class CreateGameResponse(BaseModel):
     code: str
 
-class GetGameCodeResponse(BaseModel):
+class ResponseSuccess(BaseModel):
     success: bool
 
 class TaskRequest(BaseModel):

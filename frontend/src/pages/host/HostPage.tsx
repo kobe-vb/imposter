@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Home } from 'lucide-react';
+import { Home, RefreshCcw } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import type { Player } from '@/types/types';
 import { api } from '@/api/api';
@@ -72,6 +72,18 @@ export default function HostPage() {
     }
   };
 
+  const resetGame = async () => {
+    const confirm = window.confirm('Zijt ge zeker dat ge het spel wilt resetten?');
+
+    if (!confirm)
+      return; 
+    try {
+      await api.post(`/game/${gameCode}/reset`, {});
+      fetchInitialData();
+    } catch (error) {
+      console.error('Error resetting game:', error);
+    }
+  };
 
   const killPlayer = async (name: string) => {
     try {
@@ -308,6 +320,15 @@ export default function HostPage() {
             </div>
           </div>
         </div>
+
+        {/* reset Button */}
+        <button
+          onClick={resetGame}
+          className="w-full bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+        >
+          <RefreshCcw className="h-5 w-5" />
+          reset game
+        </button>
 
         {/* Home Button */}
         <button

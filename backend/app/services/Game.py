@@ -13,21 +13,23 @@ class Game:
         
         self.players_names: list[PlayerName] = players
         self.players: list[Player] = [Player(name=player, alive=True) for player in players]
+        self.original_roles: list[RoleInfo] = roles
         self.roles: set[str] = set()
 
         self.assign_roles(roles)        
-        self.players = sorted(
-            self.players, 
-            key=lambda player: (player.role is None, player.role)
-        )        
+       
         self.settings: GameSettings = settings
         self.tasks: Tasks = Tasks(self.players, settings.taskTemplate)
         self.handicap: Tasks = Tasks(self.players, settings.taskTemplate, "handicaps")
         
-        
         self.current_round: int = 0
                 
-        self.last_active: datetime = datetime.datetime.now()  
+        self.last_active: datetime = datetime.datetime.now()
+    
+    def reset(self):  
+        self.players = [Player(name=player, alive=True) for player in self.players_names]
+        self.assign_roles(self.original_roles)
+        self.current_round = 0
         
     def assign_roles(self, roles: list[RoleInfo]):
         
@@ -40,6 +42,11 @@ class Game:
                 self.players[chosen_index].role = role.name
                 self.roles.add(role.name)
                 all_indices.remove(chosen_index)
+                
+        self.players = sorted(
+            self.players, 
+            key=lambda player: (player.role is None, player.role)
+        )  
     
     def get_roles(self) -> list[str]:
         return ["any"] + list(self.roles)

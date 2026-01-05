@@ -2,7 +2,7 @@ from fastapi import status
 from fastapi import APIRouter, HTTPException
 
 from app.api.ws.monitor import broadcast_player
-from app.schemas.schemas import AssignTaskRequest, CreateGameRequest, CreateGameResponse, GetGameCodeResponse, Player, PlayerName, ReviveRequest, RoleRequest, TaskRequest
+from app.schemas.schemas import AssignTaskRequest, CreateGameRequest, CreateGameResponse, Player, PlayerName, ResponseSuccess, ReviveRequest, RoleRequest, TaskRequest
 from app.services.Games import games
 
 router = APIRouter()
@@ -22,14 +22,14 @@ def create_game(payload: CreateGameRequest):
         )
     return CreateGameResponse(code=code)
 
-@router.get("/{code}", response_model=GetGameCodeResponse)
+@router.get("/{code}", response_model=ResponseSuccess)
 def get_valid_code(code: str) -> str:
     if not games.is_valid_game_code(code):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Game niet gevonden"
         )
-    return GetGameCodeResponse(success=True)
+    return ResponseSuccess(success=True)
 
 @router.get("/{code}/players", response_model=list[Player])
 def get_game_players(code: str):
@@ -111,3 +111,8 @@ def get_roles(code: str):
 @router.post("/{code}/task/assign", response_model=list[Player])
 def assign_task(code: str, request: AssignTaskRequest):
     return games.get_game(code).assign_task(request.task, request.role)
+
+@router.post("/{code}/reset", response_model=ResponseSuccess)
+def reset_game(code: str):
+    games.get_game(code).reset()
+    return ResponseSuccess(success=True)
