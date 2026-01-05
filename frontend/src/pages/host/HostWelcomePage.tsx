@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Home, Monitor, Play, Plus } from "lucide-react";
+import { Home, Monitor, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function HostWelcomePage() {

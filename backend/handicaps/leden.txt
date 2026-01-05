@@ -1,0 +1,6 @@
+a
+z
+e
+tr
+gij moet nu altijd {player:dead} hand vast houden
+jow gaa naar {? "dit", "dat" }

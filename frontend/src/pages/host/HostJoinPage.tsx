@@ -1,14 +1,42 @@
+import { api } from "@/api/api";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Home } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function HostJoinPage() {
 
-    const navigate = useNavigate();
-
     const [gameCode, setGameCode] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const joinGame = async () => {
+        if (!gameCode.trim()) {
+            setError('Voer een game code in');
+            return;
+        }
+        setLoading(true);
+        setError('');
+        try {
+            const data = await api.get<{ success: boolean }>(`/game/${gameCode}`);
+
+            if (data.success) {
+                navigate(`/host/${gameCode}/monitor`);
+            }
+            else {
+                setError('Game niet gevonden');
+            }
+        } catch (err) {
+            setError('Game niet gevonden');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const navigate = useNavigate();
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
@@ -26,20 +54,28 @@ export default function HostJoinPage() {
                             value={gameCode}
                             onChange={(e) => setGameCode(e.target.value.toUpperCase())}
                             className="text-center text-2xl font-mono bg-slate-900/50 border-purple-500/30 text-white"
-                            onKeyDown={(e) => e.key === 'Enter' && navigate(`/host/${gameCode}`)}
+                            onKeyDown={(e) => e.key === 'Enter' && joinGame()}
                         />
 
+                        {error && (
+                            <Alert className="bg-red-500/10 border-red-500/50 text-red-200">
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
+                        )}
+
                         <Button
-                            onClick={async () => { navigate(`/host/${gameCode}`) }}
+                            onClick={joinGame}
+                            disabled={loading}
                             className="w-full bg-purple-600 hover:bg-purple-700 text-white text-lg py-6"
                         >
-                            {'Join Game'}
+                            {loading ? 'Laden...' : 'monitor game'}
                         </Button>
 
                         <Button
-                            onClick={() => navigate(`/`)}
+                            onClick={() => navigate("/")}
                             className="w-full bg-slate-700 hover:bg-slate-600"
                         >
+                            <Home className="mr-2 h-5 w-5" />
                             Terug
                         </Button>
                     </div>
@@ -48,4 +84,3 @@ export default function HostJoinPage() {
         </div>
     );
 }
-

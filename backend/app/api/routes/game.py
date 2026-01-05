@@ -1,6 +1,7 @@
 from fastapi import status
 from fastapi import APIRouter, HTTPException
 
+from app.api.ws.monitor import broadcast_player
 from app.schemas.schemas import AssignTaskRequest, CreateGameRequest, CreateGameResponse, GetGameCodeResponse, Player, PlayerName, ReviveRequest, RoleRequest, TaskRequest
 from app.services.Games import games
 
@@ -75,7 +76,6 @@ def add_handicap(code: str, request: TaskRequest):
             detail=str(e)
         )
 
-
 @router.post("/{code}/player/{player}/task", response_model=list[Player])
 def set_player_task(code: str, player: PlayerName, request: TaskRequest):
     return games.get_game(code).set_player_task(player, request.task)
@@ -85,8 +85,12 @@ def set_player_role(code: str, player: PlayerName, request: RoleRequest):
     return games.get_game(code).set_player_role(player, request.role)
 
 @router.get("/{code}/player/{player}/info", response_model=Player)
-def get_player(code: str, player: str):
-    return games.get_game(code).get_player(player)
+async def get_player(code: str, player: str):
+    game = games.get_game(code)
+    player_obj = game.get_player(player)
+
+    await broadcast_player(code, player)
+    return player_obj
 
 @router.delete("/{code}/player/{player}/kill", response_model=list[Player])
 def kill_player(code: str, player: PlayerName):
@@ -103,13 +107,6 @@ def new_round(code: str):
 @router.get("/{code}/roles", response_model=list[str])
 def get_roles(code: str):
     return games.get_game(code).get_roles()
-
-# const updated: Player[] = await api.post(`/game/${gameCode}/task/assign`, {
-#         task: newTask,
-#         role: selectedRole
-#       });
-
-
 
 @router.post("/{code}/task/assign", response_model=list[Player])
 def assign_task(code: str, request: AssignTaskRequest):

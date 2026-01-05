@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 
 from app.api.routes import api_router
+from app.api.ws import ws_router
 
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -35,6 +36,7 @@ app.add_middleware(
 
 # API routes (altijd op /api prefix)
 app.include_router(api_router, prefix="/api")
+app.include_router(ws_router, prefix="/ws")
 # Uploads folder
 
 # # Exception handlers

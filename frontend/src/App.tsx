@@ -10,6 +10,7 @@ import HostWelcomePage from './pages/host/HostWelcomePage';
 import HostJoinPage from './pages/host/HostJoinPage';
 import HostSetupPage from './pages/host/HostSetupPage';
 import HostPage from './pages/host/HostPage';
+import HostMonitorPage from './pages/host/HostMonitorPage';
 
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Route path="/host/join" element={<HostJoinPage />} />
         <Route path="/host/setup" element={<HostSetupPage />} />
         <Route path="/host/:gameCode" element={<HostPage />} />
+        <Route path="/host/:gameCode/monitor" element={<HostMonitorPage />} />
 
         <Route path="/players/setup" element={<PlayerSetupPage />} />
 
