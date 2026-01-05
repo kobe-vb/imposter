@@ -22,6 +22,7 @@ app = FastAPI(title="MindMatch API")
 origins = [
     "http://localhost:5173",  # Vite dev server
     "http://192.168.68.112:5173",
+    "http://192.168.184.13:5173"
 ]
 
 app.add_middleware(

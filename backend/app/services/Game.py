@@ -28,6 +28,8 @@ class Game:
         self.current_round: int = 0
                 
         self.last_active: datetime = datetime.datetime.now()  
+        
+        
     def get_players_names(self) -> list[PlayerName]:
         names = [player.name for player in self.players]
         random.shuffle(names)
@@ -43,7 +45,7 @@ class Game:
                 if player.alive:
                     player.task = None
                 else:
-                    player.task = self.handicap.get_random_task()
+                    player.task = self.handicap.get_random_task(player)
         return self.players
     
     def kill_player(self, name: str) -> list[Player]:
@@ -56,6 +58,12 @@ class Game:
         for player in self.players:
             if player.name == name:
                 player.task = task
+        return self.players
+    
+    def set_player_role(self, name: str, role: str) -> list[Player]:
+        for player in self.players:
+            if player.name == name:
+                player.role = role
         return self.players
     
     def new_round(self) -> list[Player]:
@@ -73,7 +81,7 @@ class Game:
         chosen_players = random.sample(alive_non_imposters, num_tasks)
 
         for player in chosen_players:
-            player.task = self.tasks.get_random_task()
+            player.task = self.tasks.get_random_task(player)
 
         return self.players    
                 

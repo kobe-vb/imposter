@@ -1,24 +1,30 @@
-import stat
+from fastapi import status
 from fastapi import APIRouter, HTTPException
 
-from app.schemas.schemas import CreateGameRequest, CreateGameResponse, GetGameCodeResponse, Player, PlayerName, ReviveRequest, TaskRequest
+from app.schemas.schemas import CreateGameRequest, CreateGameResponse, GetGameCodeResponse, Player, PlayerName, ReviveRequest, RoleRequest, TaskRequest
 from app.services.Games import games
 
 router = APIRouter()
 
 @router.post("/create", response_model=CreateGameResponse)
 def create_game(payload: CreateGameRequest):
-    code = games.create_game(
-        payload.players,
-        payload.settings
-    )
+    try:
+        code = games.create_game(
+            payload.players,
+            payload.settings
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     return CreateGameResponse(code=code)
 
 @router.get("/{code}", response_model=GetGameCodeResponse)
 def get_valid_code(code: str) -> str:
     if not games.is_valid_game_code(code):
         raise HTTPException(
-            status_code=stat.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Game niet gevonden"
         )
     return GetGameCodeResponse(success=True)
@@ -41,7 +47,13 @@ def remove_task(code: str, task: str):
 
 @router.post("/{code}/task", response_model=list[str])
 def add_task(code: str, request: TaskRequest):
-    return games.get_game(code).tasks.add_task(request.task)
+    try:
+        return games.get_game(code).tasks.add_task(request.task)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 
 @router.get("/{code}/handicaps", response_model=list[str])
 def get_game_handicaps(code: str):
@@ -53,11 +65,23 @@ def remove_handicap(code: str, handicap: str):
 
 @router.post("/{code}/handicap", response_model=list[str])
 def add_handicap(code: str, request: TaskRequest):
-    return games.get_game(code).handicap.add_task(request.task)
+
+    try:
+        return games.get_game(code).handicap.add_task(request.task)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
 
 @router.post("/{code}/player/{player}/task", response_model=list[Player])
 def set_player_task(code: str, player: PlayerName, request: TaskRequest):
     return games.get_game(code).set_player_task(player, request.task)
+
+@router.post("/{code}/player/{player}/role", response_model=list[Player])
+def set_player_role(code: str, player: PlayerName, request: RoleRequest):
+    return games.get_game(code).set_player_role(player, request.role)
 
 @router.get("/{code}/player/{player}/info", response_model=Player)
 def get_player(code: str, player: str):

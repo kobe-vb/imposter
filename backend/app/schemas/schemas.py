@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field
 class Player(BaseModel):
     name: str
     alive: bool
-    role: str | None
-    task: str | None
+    role: str | None = None
+    task: str | None = None
 
 type PlayerName = str
     
@@ -29,6 +29,9 @@ class GetGameCodeResponse(BaseModel):
 
 class TaskRequest(BaseModel):
     task: str
+
+class RoleRequest(BaseModel):
+    role: str
 
 class ReviveRequest(BaseModel):
     name: PlayerName
