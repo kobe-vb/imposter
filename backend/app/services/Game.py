@@ -11,8 +11,9 @@ class Game:
     def __init__(self, code: str, players: list[PlayerName], settings: GameSettings, roles: list[RoleInfo]):
         self.code = code
         
-        print(roles)
+        self.players_names: list[PlayerName] = players
         self.players: list[Player] = [Player(name=player, alive=True) for player in players]
+        self.roles: set[str] = set()
 
         self.assign_roles(roles)        
         self.players = sorted(
@@ -22,6 +23,7 @@ class Game:
         self.settings: GameSettings = settings
         self.tasks: Tasks = Tasks(self.players, settings.taskTemplate)
         self.handicap: Tasks = Tasks(self.players, settings.taskTemplate, "handicaps")
+        
         
         self.current_round: int = 0
                 
@@ -36,12 +38,14 @@ class Game:
                     break
                 chosen_index = random.choice(all_indices)
                 self.players[chosen_index].role = role.name
+                self.roles.add(role.name)
                 all_indices.remove(chosen_index)
+    
+    def get_roles(self) -> list[str]:
+        return ["any"] + list(self.roles)
         
     def get_players_names(self) -> list[PlayerName]:
-        names = [player.name for player in self.players]
-        random.shuffle(names)
-        return names
+        return self.players_names
     
     def get_player(self, name: str) -> Player:
         return [player for player in self.players if player.name == name][0]
@@ -65,7 +69,7 @@ class Game:
     def set_player_task(self, name: str, task: str) -> list[Player]:
         for player in self.players:
             if player.name == name:
-                player.task = task
+                player.task = self.tasks.formatter.format(task, player)
         return self.players
     
     def set_player_role(self, name: str, role: str) -> list[Player]:
@@ -74,17 +78,33 @@ class Game:
                 player.role = role
         return self.players
     
+    def assign_task(self, task: str, role: str) -> list[Player]:
+        
+        available_players: list[Player]
+        if role == "any":
+            available_players = [player for player in self.players if player.task is None]
+        else:
+            available_players = [player for player in self.players if player.role == role and player.task is None]
+        
+        if len(available_players) == 0:
+            return self.players
+        
+        random_player: Player = random.choice(available_players)
+        random_player.task = self.tasks.formatter.format(task, random_player)
+        return self.players
+    
     def new_round(self) -> list[Player]:
         self.current_round += 1
+        
+        for player in self.players:
+            if player.alive:
+                player.task = None
 
         alive_non_imposters = [
             p for p in self.players 
             if p.alive and p.role != "imposter"
         ]
         
-        for player in alive_non_imposters:
-            player.task = None
-
         num_tasks = min(self.settings.tasksPerRound, len(alive_non_imposters))
         chosen_players = random.sample(alive_non_imposters, num_tasks)
 

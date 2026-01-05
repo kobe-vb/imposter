@@ -1,7 +1,7 @@
 from fastapi import status
 from fastapi import APIRouter, HTTPException
 
-from app.schemas.schemas import CreateGameRequest, CreateGameResponse, GetGameCodeResponse, Player, PlayerName, ReviveRequest, RoleRequest, TaskRequest
+from app.schemas.schemas import AssignTaskRequest, CreateGameRequest, CreateGameResponse, GetGameCodeResponse, Player, PlayerName, ReviveRequest, RoleRequest, TaskRequest
 from app.services.Games import games
 
 router = APIRouter()
@@ -99,3 +99,18 @@ def revive_player(code: str, request: ReviveRequest):
 @router.get("/{code}/round/new", response_model=list[Player])
 def new_round(code: str):
     return games.get_game(code).new_round()
+
+@router.get("/{code}/roles", response_model=list[str])
+def get_roles(code: str):
+    return games.get_game(code).get_roles()
+
+# const updated: Player[] = await api.post(`/game/${gameCode}/task/assign`, {
+#         task: newTask,
+#         role: selectedRole
+#       });
+
+
+
+@router.post("/{code}/task/assign", response_model=list[Player])
+def assign_task(code: str, request: AssignTaskRequest):
+    return games.get_game(code).assign_task(request.task, request.role)

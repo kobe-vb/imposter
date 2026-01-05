@@ -24,6 +24,10 @@ class CreateGameRequest(BaseModel):
     players: List[PlayerName]
     settings: GameSettings
     roles: List[RoleInfo]
+    
+class AssignTaskRequest(BaseModel):
+    task: str
+    role: str
  
 class CreateGameResponse(BaseModel):
     code: str

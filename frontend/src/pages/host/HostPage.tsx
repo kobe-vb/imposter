@@ -6,6 +6,7 @@ import { api } from '@/api/api';
 import PlayersWithTasksDisplay from '@/components/PlayersWithTasksDisplay';
 import TaskManager from '@/components/TaskManager';
 import PlayerCard from '@/components/PlayerCard';
+import TaskInput from '@/components/TaskInput';
 
 export default function HostPage() {
   const { gameCode } = useParams();
@@ -13,6 +14,11 @@ export default function HostPage() {
   const [availableTasks, setAvailableTasks] = useState<string[]>([]);
   const [availableHandicaps, setAvailableHandicaps] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
+  const [newTask, setNewTask] = useState<string>('');
+  const [selectedRole, setSelectedRole] = useState<string>('any');
+  const [availableRoles, setAvailableRoles] = useState<string[]>([]);
+  const [loadingTaskAssign, setLoadingTaskAssign] = useState<boolean>(false);
 
   const alivePlayers = players.filter(p => p.alive).length;
   const deadPlayers = players.filter(p => !p.alive).length;
@@ -28,16 +34,44 @@ export default function HostPage() {
       const players: Player[] = await api.get(`/game/${gameCode}/players`);
       const tasks: string[] = await api.get(`/game/${gameCode}/tasks`);
       const handicaps: string[] = await api.get(`/game/${gameCode}/handicaps`);
+      const roles: string[] = await api.get(`/game/${gameCode}/roles`);
 
       setPlayers(players);
       setAvailableTasks(tasks);
       setAvailableHandicaps(handicaps);
+      setAvailableRoles(roles);
+
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  const submitTaskWithRole = async () => {
+
+    if (!newTask.trim()) {
+      alert('Voer een taak!!');
+      return;
+    }
+
+    setLoadingTaskAssign(true);
+    try {
+      const updated: Player[] = await api.post(`/game/${gameCode}/task/assign`, {
+        task: newTask,
+        role: selectedRole
+      });
+
+      setPlayers(updated);
+      setNewTask('');
+      setSelectedRole('any');
+    } catch (error) {
+      console.error('Error assigning task with role:', error);
+    } finally {
+      setLoadingTaskAssign(false);
+    }
+  };
+
 
   const killPlayer = async (name: string) => {
     try {
@@ -193,6 +227,38 @@ export default function HostPage() {
             {loading ? 'Laden...' : 'Nieuwe Ronde'}
           </button>
         </div>
+
+        {/* New Task Section */}
+        <div className="bg-slate-800/50 backdrop-blur border border-purple-500/20 rounded-lg p-4 flex flex-col md:flex-row gap-4 items-center">
+          {/* Task Input */}
+          <TaskInput
+            value={newTask}
+            onChange={setNewTask}
+            placeholder="Voer taak in..."
+            onSubmit={submitTaskWithRole} // enter kan ook submit triggeren
+          />
+
+          {/* Roles Dropdown */}
+          <select
+            value={selectedRole}
+            onChange={(e) => setSelectedRole(e.target.value)}
+            className="bg-slate-700/50 border border-purple-500/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+          >
+            {availableRoles.map((role) => (
+              <option key={role} value={role}>{role}</option>
+            ))}
+          </select>
+
+          {/* Submit Button */}
+          <button
+            onClick={submitTaskWithRole}
+            disabled={loadingTaskAssign}
+            className="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors"
+          >
+            {loadingTaskAssign ? 'Bezig...' : 'Submit'}
+          </button>
+        </div>
+
 
         {/* Taken Deze Ronde - Levende Spelers */}
         <PlayersWithTasksDisplay

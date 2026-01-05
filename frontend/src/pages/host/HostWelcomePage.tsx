@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Home, Play, Plus } from "lucide-react";
+import { Home, Monitor, Play, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function HostWelcomePage() {
@@ -13,7 +13,7 @@ export default function HostWelcomePage() {
                 <CardContent className="pt-6">
                     <div className="text-center mb-8">
                         <h2 className="text-3xl font-bold text-white mb-2">Host Modus</h2>
-                        <p className="text-slate-300">Start een nieuw spel of join bestaand</p>
+                        <p className="text-slate-300">Start een nieuw spel of monitor een bestaand</p>
                     </div>
 
                     <div className="space-y-3">
@@ -29,8 +29,8 @@ export default function HostWelcomePage() {
                             onClick={() => navigate(`/host/join`)}
                             className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white text-xl py-8"
                         >
-                            <Play className="mr-2 h-6 w-6" />
-                            Bestaand Spel
+                            <Monitor className="mr-2 h-6 w-6" />
+                            monitor Spel
                         </Button>
 
                         <Button

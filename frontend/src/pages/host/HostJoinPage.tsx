@@ -15,7 +15,7 @@ export default function HostJoinPage() {
             <Card className="w-full max-w-md bg-slate-800/50 backdrop-blur border-purple-500/20">
                 <CardContent className="pt-6">
                     <div className="text-center mb-8">
-                        <h2 className="text-3xl font-bold text-white mb-2">Join Game</h2>
+                        <h2 className="text-3xl font-bold text-white mb-2">Monitor Game</h2>
                         <p className="text-slate-300">Voer de game code in</p>
                     </div>
 
