@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Home, Skull, Plus, X } from 'lucide-react';
+import { Home } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import type { Player } from '@/types/types';
 import { api } from '@/api/api';
 import PlayersWithTasksDisplay from '@/components/PlayersWithTasksDisplay';
 import TaskManager from '@/components/TaskManager';
+import PlayerCard from '@/components/PlayerCard';
 
 export default function HostPage() {
   const { gameCode } = useParams();
@@ -12,8 +13,6 @@ export default function HostPage() {
   const [availableTasks, setAvailableTasks] = useState<string[]>([]);
   const [availableHandicaps, setAvailableHandicaps] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [editingPlayer, setEditingPlayer] = useState<string | null>(null);
-  const [customTask, setCustomTask] = useState<string>("");
 
   const alivePlayers = players.filter(p => p.alive).length;
   const deadPlayers = players.filter(p => !p.alive).length;
@@ -70,12 +69,16 @@ export default function HostPage() {
     }
   };
 
+
   const addTask = async (task: string) => {
+    if (!task.trim()) {
+      throw new Error("Taak mag niet leeg zijn");
+    }
     try {
       await api.post(`/game/${gameCode}/task`, { task });
       setAvailableTasks([...availableTasks, task]);
     } catch (error) {
-      console.error('Error adding task:', error);
+      throw error;
     }
   };
 
@@ -89,11 +92,14 @@ export default function HostPage() {
   };
 
   const addHandicap = async (handicap: string) => {
+    if (!handicap.trim()) {
+      throw new Error("Handicap mag niet leeg zijn");
+    }
     try {
       await api.post(`/game/${gameCode}/handicap`, { task: handicap });
       setAvailableHandicaps([...availableHandicaps, handicap]);
     } catch (error) {
-      console.error('Error adding handicap:', error);
+      throw error;
     }
   };
 
@@ -106,19 +112,23 @@ export default function HostPage() {
     }
   };
 
-  const assignCustomTask = async (playerName: string) => {
+  const assignCustomTask = async (playerName: string, customTask: string) => {
     if (!customTask.trim()) return;
 
     try {
       const updated: Player[] = await api.post(`/game/${gameCode}/player/${playerName}/task`, { task: customTask });
       setPlayers(updated);
-      setEditingPlayer(null);
-      setCustomTask("");
     } catch (error) {
       console.error('Error assigning task:', error);
-    } finally {
-      setEditingPlayer(null);
-      setCustomTask("");
+    }
+  };
+
+  const assignRole = async (playerName: string, role: string) => {
+    try {
+      const updated: Player[] = await api.post(`/game/${gameCode}/player/${playerName}/role`, { role: role });
+      setPlayers(updated);
+    } catch (error) {
+      console.error('Error assigning role:', error);
     }
   };
 
@@ -220,86 +230,14 @@ export default function HostPage() {
           <div className="p-6">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {players.map((player) => (
-                <div
+                <PlayerCard
                   key={player.name}
-                  className={`border rounded-lg p-4 ${
-                    player.alive
-                      ? 'bg-slate-900/50 border-slate-700'
-                      : 'bg-gray-800/30 border-gray-700'
-                  }`}
-                >
-                  <div className="mb-3">
-                    <p
-                      className={`text-base font-bold truncate ${
-                        player.alive ? 'text-white' : 'text-gray-500 line-through'
-                      }`}
-                    >
-                      {player.name}
-                    </p>
-                    <p className="text-xs text-slate-400 truncate">
-                      {player.role || 'burger'}
-                    </p>
-                  </div>
-
-                  {editingPlayer === player.name ? (
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        value={customTask}
-                        onChange={(e) => setCustomTask(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && assignCustomTask(player.name)}
-                        placeholder="Taak..."
-                        className="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-blue-500"
-                        autoFocus
-                      />
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => assignCustomTask(player.name)}
-                          className="flex-1 bg-green-600 hover:bg-green-700 text-white py-1 px-2 rounded text-xs font-medium transition-colors"
-                        >
-                          ✓
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingPlayer(null);
-                            setCustomTask("");
-                          }}
-                          className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-1 px-2 rounded text-xs font-medium transition-colors"
-                        >
-                          <X className="h-3 w-3 mx-auto" />
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {player.alive ? (
-                        <>
-                          <button
-                            onClick={() => killPlayer(player.name)}
-                            className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1"
-                          >
-                            <Skull className="h-4 w-4" />
-                            Kill
-                          </button>
-                          <button
-                            onClick={() => setEditingPlayer(player.name)}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1"
-                          >
-                            <Plus className="h-4 w-4" />
-                            Taak
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          onClick={() => revivePlayer(player.name)}
-                          className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          ❤️ Revive
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
+                  player={player}
+                  onKill={killPlayer}
+                  onRevive={revivePlayer}
+                  onAssignTask={assignCustomTask}
+                  onChangeRole={assignRole}
+                />
               ))}
             </div>
           </div>
