@@ -26,9 +26,13 @@ export default function AnimatedCollapsibleSection({
 
   useEffect(() => {
     if (!contentRef.current) return;
-    
+
     if (isOpen) {
       setHeight(contentRef.current.scrollHeight);
+
+      setTimeout(() => {
+        setHeight(undefined);
+      }, 300);
     } else {
       setHeight(0);
     }
@@ -49,7 +53,7 @@ export default function AnimatedCollapsibleSection({
             </span>
           )}
         </div>
-        
+
         <div className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
           <ChevronDown className={`h-6 w-6 ${titleColor}`} />
         </div>

@@ -7,6 +7,7 @@ class Player(BaseModel):
     alive: bool
     role: str | None = None
     task: str | None = None
+    commend: str | None = None
 
 type PlayerName = str
     
@@ -40,6 +41,9 @@ class TaskRequest(BaseModel):
 
 class RoleRequest(BaseModel):
     role: str
+
+class CommendRequest(BaseModel):
+    commend: str
 
 class ReviveRequest(BaseModel):
     name: PlayerName

@@ -142,6 +142,24 @@ export function useGameActions(gameCode: string | undefined) {
         }
     };
 
+    const assignCommend = async (
+        playerName: string,
+        commend: string,
+        onSuccess: (players: Player[]) => void
+    ) => {
+        if (!gameCode || !commend.trim()) return;
+
+        try {
+            const updated: Player[] = await api.post(
+                `/game/${gameCode}/player/${playerName}/commend`,
+                { commend }
+            );
+            onSuccess(updated);
+        } catch (error) {
+            console.error('Error assigning commend:', error);
+        }
+    };
+
     const assignRole = async (
         playerName: string,
         role: string,
@@ -172,6 +190,7 @@ export function useGameActions(gameCode: string | undefined) {
         deleteHandicap,
         assignCustomTask,
         assignRole,
+        assignCommend,
         loadingTaskAssign
     };
 }

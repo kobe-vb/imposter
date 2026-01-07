@@ -85,6 +85,12 @@ class Game:
                 player.role = role
         return self.players
     
+    def commend_player(self, name: str, commend: str) -> list[Player]:
+        for player in self.players:
+            if player.name == name:
+                player.commend = self.tasks.formatter.format(commend, player)
+        return self.players
+    
     def assign_task(self, task: str, role: str) -> list[Player]:
         
         available_players: list[Player]

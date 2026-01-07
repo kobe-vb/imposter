@@ -2,7 +2,7 @@ from fastapi import status
 from fastapi import APIRouter, HTTPException
 
 from app.api.ws.monitor import broadcast_player
-from app.schemas.schemas import AssignTaskRequest, CreateGameRequest, CreateGameResponse, Player, PlayerName, ResponseSuccess, ReviveRequest, RoleRequest, TaskRequest
+from app.schemas.schemas import AssignTaskRequest, CommendRequest, CreateGameRequest, CreateGameResponse, Player, PlayerName, ResponseSuccess, ReviveRequest, RoleRequest, TaskRequest
 from app.services.Games import games
 
 router = APIRouter()
@@ -83,6 +83,10 @@ def set_player_task(code: str, player: PlayerName, request: TaskRequest):
 @router.post("/{code}/player/{player}/role", response_model=list[Player])
 def set_player_role(code: str, player: PlayerName, request: RoleRequest):
     return games.get_game(code).set_player_role(player, request.role)
+
+@router.post("/{code}/player/{player}/commend", response_model=list[Player])
+def commend_player(code: str, player: PlayerName, request: CommendRequest):
+    return games.get_game(code).commend_player(player, request.commend)
 
 @router.get("/{code}/player/{player}/info", response_model=Player)
 async def get_player(code: str, player: str):

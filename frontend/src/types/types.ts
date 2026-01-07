@@ -5,6 +5,7 @@ export type Player = {
   alive: boolean;
   role?: string;
   task?: string;
+  commend?: string;
 };
 
 export type Role = { name: string; count: number };

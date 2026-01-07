@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Home, RefreshCcw, Target, Skull, Users, ListChecks, AlertTriangle} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Home, RefreshCcw, Skull, Users, ListChecks, AlertTriangle, User, UserCog, BicepsFlexed } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import PlayersWithTasksDisplay from '@/components/PlayersWithTasksDisplay';
 import TaskManager from '@/components/TaskManager';
@@ -12,7 +12,7 @@ import AnimatedCollapsibleSection from '@/components/AnimatedCollapsibleSection'
 
 export default function HostPage() {
   const { gameCode } = useParams();
-  
+
   const {
     players,
     setPlayers,
@@ -39,11 +39,25 @@ export default function HostPage() {
     deleteHandicap,
     assignCustomTask,
     assignRole,
+    assignCommend,
     loadingTaskAssign
   } = useGameActions(gameCode);
 
   const [newTask, setNewTask] = useState<string>('');
   const [selectedRole, setSelectedRole] = useState<string>('any');
+  const [editMode, setEditMode] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        setEditMode(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleSubmitTask = () => {
     submitTaskWithRole(newTask, selectedRole, (updated) => {
@@ -102,7 +116,7 @@ export default function HostPage() {
           <div className="text-center relative">
             <h2 className="text-4xl font-bold text-white mb-1">Game Code</h2>
             <p className="text-6xl font-mono font-bold text-white">{gameCode}</p>
-            
+
           </div>
         </div>
 
@@ -124,83 +138,95 @@ export default function HostPage() {
           </div>
         </div>
 
-        {/* Beschikbare Taken - Collapsible */}
-        <AnimatedCollapsibleSection
-          title="Beschikbare Taken"
-          icon={<ListChecks className="h-5 w-5" />}
-          badge={availableTasks.length}
-          borderColor="border-blue-500/20"
-          titleColor="text-blue-400"
-          defaultOpen={false}
+        <button
+          onClick={() => (setEditMode(!editMode))}
+          className="w-full bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
         >
-          <TaskManager
-            items={availableTasks}
-            onAdd={handleAddTask}
-            onDelete={handleDeleteTask}
-            placeholder="Nieuwe taak toevoegen..."
-          />
-        </AnimatedCollapsibleSection>
+          {editMode ? <UserCog className="h-5 w-5" /> : <User className="h-5 w-5" />}
+          {editMode ? 'Edit Mode' : 'Normal Mode'}
+        </button>
 
-        {/* Beschikbare Handicaps - Collapsible */}
-        <AnimatedCollapsibleSection
-          title="Beschikbare Handicaps"
-          icon={<AlertTriangle className="h-5 w-5" />}
-          badge={availableHandicaps.length}
-          borderColor="border-red-500/20"
-          titleColor="text-red-400"
-          defaultOpen={false}
-        >
-          <TaskManager
-            items={availableHandicaps}
-            onAdd={handleAddHandicap}
-            onDelete={handleDeleteHandicap}
-            placeholder="Nieuwe handicap toevoegen..."
-          />
-        </AnimatedCollapsibleSection>
+        {editMode && (
+          <>
+            {/* Beschikbare Taken - Collapsible */}
+            <AnimatedCollapsibleSection
+              title="Beschikbare Taken"
+              icon={<ListChecks className="h-5 w-5" />}
+              badge={availableTasks.length}
+              borderColor="border-blue-500/20"
+              titleColor="text-blue-400"
+              defaultOpen={true}
+            >
+              <TaskManager
+                items={availableTasks}
+                onAdd={handleAddTask}
+                onDelete={handleDeleteTask}
+                placeholder="Nieuwe taak toevoegen..."
+              />
+            </AnimatedCollapsibleSection>
 
+            {/* Beschikbare Handicaps - Collapsible */}
+            <AnimatedCollapsibleSection
+              title="Beschikbare Handicaps"
+              icon={<AlertTriangle className="h-5 w-5" />}
+              badge={availableHandicaps.length}
+              borderColor="border-red-500/20"
+              titleColor="text-red-400"
+              defaultOpen={true}
+            >
+              <TaskManager
+                items={availableHandicaps}
+                onAdd={handleAddHandicap}
+                onDelete={handleDeleteHandicap}
+                placeholder="Nieuwe handicap toevoegen..."
+              />
+            </AnimatedCollapsibleSection>
+          </>
+        )}
         {/* New Round Button */}
-        <div className="bg-slate-800/50 backdrop-blur border border-purple-500/20 rounded-lg p-4">
-          <button
-            onClick={() => newRound(setPlayers)}
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg rounded-lg font-semibold transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Laden...' : 'Nieuwe Ronde'}
-          </button>
-        </div>
+        <div className="bg-slate-800/50 backdrop-blur border border-purple-500/20 rounded-lg">
+          <div className='p-4'>
+            <button
+              onClick={() => newRound(setPlayers)}
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg rounded-lg font-semibold transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Laden...' : 'Nieuwe Ronde'}
+            </button>
+          </div>
+          {/* New Task Section */}
+          <div className="flex flex-col md:flex-row gap-4 items-center p-4">
+            <TaskInput
+              value={newTask}
+              onChange={setNewTask}
+              placeholder="Voer taak in..."
+              onSubmit={handleSubmitTask}
+            />
 
-        {/* New Task Section */}
-        <div className="bg-slate-800/50 backdrop-blur border border-purple-500/20 rounded-lg p-4 flex flex-col md:flex-row gap-4 items-center">
-          <TaskInput
-            value={newTask}
-            onChange={setNewTask}
-            placeholder="Voer taak in..."
-            onSubmit={handleSubmitTask}
-          />
+            <select
+              value={selectedRole}
+              onChange={(e) => setSelectedRole(e.target.value)}
+              className="bg-slate-700/50 border border-purple-500/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+            >
+              {availableRoles.map((role) => (
+                <option key={role} value={role}>{role}</option>
+              ))}
+            </select>
 
-          <select
-            value={selectedRole}
-            onChange={(e) => setSelectedRole(e.target.value)}
-            className="bg-slate-700/50 border border-purple-500/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
-          >
-            {availableRoles.map((role) => (
-              <option key={role} value={role}>{role}</option>
-            ))}
-          </select>
-
-          <button
-            onClick={handleSubmitTask}
-            disabled={loadingTaskAssign}
-            className="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors disabled:opacity-50"
-          >
-            {loadingTaskAssign ? 'Bezig...' : 'Submit'}
-          </button>
+            <button
+              onClick={handleSubmitTask}
+              disabled={loadingTaskAssign}
+              className="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors disabled:opacity-50"
+            >
+              {loadingTaskAssign ? 'Bezig...' : 'Submit'}
+            </button>
+          </div>
         </div>
 
         {/* Taken Deze Ronde - Collapsible */}
         <AnimatedCollapsibleSection
           title="Taken Deze Ronde"
-          icon={<Target className="h-5 w-5" />}
+          icon={<BicepsFlexed className="h-5 w-5" />}
           badge={gameStats.numberOfTasksAssigned}
           borderColor="border-yellow-500/20"
           titleColor="text-yellow-400"
@@ -251,10 +277,12 @@ export default function HostPage() {
               <PlayerCard
                 key={player.name}
                 player={player}
+                adminMode={editMode}
                 onKill={(name) => killPlayer(name, setPlayers)}
                 onRevive={(name) => revivePlayer(name, setPlayers)}
                 onAssignTask={(name, task) => assignCustomTask(name, task, setPlayers)}
                 onChangeRole={(name, role) => assignRole(name, role, setPlayers)}
+                onCommend={(name, commend) => assignCommend(name, commend, setPlayers)}
               />
             ))}
           </div>

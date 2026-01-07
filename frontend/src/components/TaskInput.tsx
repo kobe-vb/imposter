@@ -56,8 +56,7 @@ export default function TaskInput({ value, onChange, onSubmit, placeholder }: Ta
         if (!searchTerm) return SUGGESTIONS;
         
         return SUGGESTIONS.filter(s => 
-            s.label.toLowerCase().includes(searchTerm) || 
-            s.detail.toLowerCase().includes(searchTerm)
+            s.label.toLowerCase().includes(searchTerm)
         );
     };
 
