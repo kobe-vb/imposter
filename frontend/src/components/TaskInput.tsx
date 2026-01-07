@@ -12,6 +12,7 @@ const SUGGESTIONS = [
     { label: "{player:alive}", detail: "Levende speler" },
     { label: "{player:dead}", detail: "Dode speler" },
     { label: '{? "", "" }', detail: "Random keuze", cursorOffset: -7 },
+    { label: '{self}', detail: "gekoze speler"},
 ];
 
 export default function TaskInput({ value, onChange, onSubmit, placeholder }: TaskInputProps) {

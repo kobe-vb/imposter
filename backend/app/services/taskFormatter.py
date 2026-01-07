@@ -6,7 +6,7 @@ from app.schemas.schemas import Player
 
 class TaskFormatter:
     PLAYER_REGEX = re.compile(
-        r"\{(player|player:alive|player:dead)\}"
+        r"\{(player|player:alive|player:dead|self)\}"
     )
 
     RANDOM_TEXT_REGEX = re.compile(
@@ -25,7 +25,7 @@ class TaskFormatter:
         used_players.add(player.name)
 
         task = self.PLAYER_REGEX.sub(
-            lambda m: self._replace_player(m, used_players),
+            lambda m: self._replace_player(m, used_players, player.name),
             task
         )
         if self.failed:
@@ -43,8 +43,13 @@ class TaskFormatter:
         self,
         match: re.Match,
         used_players: set[str],
+        player_name: str
     ) -> str:
+        
         token = match.group(1)
+
+        if token == "self":
+            return player_name
 
         if token == "player:alive":
             pool = [p for p in self.players if p.alive]

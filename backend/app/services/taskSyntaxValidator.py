@@ -10,6 +10,7 @@ class TaskSyntaxValidator:
         "player",
         "player:alive",
         "player:dead",
+        "self",
     }
 
     PLACEHOLDER_REGEX = re.compile(r"\{([^}?][^}]*)\}")
