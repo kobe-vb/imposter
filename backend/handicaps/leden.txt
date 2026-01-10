@@ -1,8 +1,1 @@
-a
-z
-e
-tr
-gij moet nu altijd {player:dead} hand vast houden
-jow gaa naar {? "dit", "dat" }
-cdcdsc
-{player:alive}
+hou {player:dead} zij/haar {? "linke", "rechter" } hand vast tot de game stopt

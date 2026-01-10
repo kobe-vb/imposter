@@ -21,7 +21,7 @@ export default function PlayerSetupPage() {
         setLoading(true);
         setError('');
         try {
-            const data = await api.get<{ success: boolean }>(`/game/${gameCode}`);
+            const data = await api.get<{ success: boolean }>(`/game/${gameCode}/valid`);
 
             if (data.success) {
                 navigate(`/players/${gameCode}`);
@@ -31,6 +31,7 @@ export default function PlayerSetupPage() {
             }
         } catch (err) {
             setError('Game niet gevonden');
+            console.error(err);
         } finally {
             setLoading(false);
         }

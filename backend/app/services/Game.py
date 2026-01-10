@@ -107,8 +107,10 @@ class Game:
         return self.players
     
     def new_round(self) -> list[Player]:
-        self.current_round += 1
+        self.last_active = datetime.datetime.now() # hold game active
         
+        self.current_round += 1
+
         for player in self.players:
             if player.alive:
                 player.task = None

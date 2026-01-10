@@ -1,25 +1,10 @@
-jow gaa naar {? "dit", "dat" }
-jow gaa naar {? "dit", "dat" }
-as
-sas
-sxs
-cdscdc
-cccc
-ds
-xsdccdsc
-a
-z
-e
-r
-t
-y
-g
-f
-d
-c
-p
-m
-pm
-kik
-{player:dead}
-jow {self} doe dit met {player}
+zorg dat de hele groep in een {? "rij", "colom" } gaat staan op volgorde van {? "lengte", "leeftijd", "schoen maat" }
+zorg er voor dat {player:alive} door een geele hoepel ga
+zorg er voor dat de groep de nummer {? "6", "7" } zegen als de ronde gedaan is
+{player:alive} moet het platfont aanraken met 2 handen
+{player:alive} moet het platfont aanraken met 2 handen zonder da houte geode in de kawelen lokaal
+{player} moet er zwanger uit zien
+breng {? "een potloot", "een aansteker", "kegel" } mee
+{player} moet {? "rode", "gele" } kegel op zijn hooft zeten
+maak een piramide met iedereen!!! {player} moet vanboven
+zorg dat iedeen behalve {player:alive} in deb houding staat op het einde

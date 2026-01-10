@@ -38,7 +38,6 @@ class TaskFormatter:
         
         return task
 
-
     def _replace_player(
         self,
         match: re.Match,

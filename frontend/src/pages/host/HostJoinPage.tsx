@@ -21,7 +21,7 @@ export default function HostJoinPage() {
         setLoading(true);
         setError('');
         try {
-            const data = await api.get<{ success: boolean }>(`/game/${gameCode}`);
+            const data = await api.get<{ success: boolean }>(`/game/${gameCode}/valid`);
 
             if (data.success) {
                 navigate(`/host/${gameCode}/monitor`);

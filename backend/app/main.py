@@ -10,14 +10,8 @@ from app.api.ws import ws_router
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.util.error_handlers import (
-    GameError, 
-    game_error_handler, 
-    http_exception_handler, 
-    validation_exception_handler
-)
 
-app = FastAPI(title="MindMatch API")
+app = FastAPI(title="imposter")
 
 
 origins = [

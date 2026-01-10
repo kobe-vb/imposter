@@ -12,6 +12,7 @@ class Games:
             self.remove_game(code)
     
     def remove_game(self, code: str):
+        print(f"Removing game {code}")
         if code in self.games:
             del self.games[code]
     

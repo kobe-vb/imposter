@@ -19,7 +19,7 @@ export default function PlayerInfoPage() {
 
     const fetchPlayer = async () => {
       try {
-        const data: Player = await api.get(`/game/${gameCode}/player/${playerName}/info`);
+        const data: Player = await api.get(`/player/${gameCode}/${playerName}/info`);
         setPlayer(data);
         setTimer(5);
       } catch (err) {
