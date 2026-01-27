@@ -2,18 +2,19 @@ import datetime
 import random
 from fastapi import APIRouter
 
-from app.schemas.schemas import GameSettings, Player, PlayerName, RoleInfo
+from app.schemas.schemas import GameSettings, Player, PlayerName, Question, RoleInfo
 from app.services.tasks import Tasks
 
 router = APIRouter()
 
 class Game:
-    def __init__(self, code: str, players: list[PlayerName], settings: GameSettings, roles: list[RoleInfo]):
+    def __init__(self, code: str, players: list[PlayerName], settings: GameSettings, roles: list[RoleInfo], questions: list[Question]):
         self.code = code
         
         self.players_names: list[PlayerName] = players
         self.players: list[Player] = [Player(name=player, alive=True) for player in players]
         self.original_roles: list[RoleInfo] = roles
+        self.questions: list[Question] = questions
         self.roles: set[str] = set()
 
         self.assign_roles(roles)        
@@ -83,6 +84,11 @@ class Game:
         for player in self.players:
             if player.name == name:
                 player.role = role
+        return self.players
+    
+    def add_question(self, name: str, questions: list[str]) -> list[Player]:
+        self.get_player(name).set_questions(questions)
+        
         return self.players
     
     def commend_player(self, name: str, commend: str) -> list[Player]:

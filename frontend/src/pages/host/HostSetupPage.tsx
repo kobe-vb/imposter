@@ -3,7 +3,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import type { CreateGameResponse, GameSettings, PlayerName, Role } from "@/types/types";
+import type { CreateGameResponse, GameSettings, PlayerName, Role, Question } from "@/types/types";
 import { Plus, Trash2, Move } from "lucide-react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -14,7 +14,9 @@ import type { DropResult } from "@hello-pangea/dnd";
 export default function HostSetupPage() {
     const navigate = useNavigate();
 
-    const [players, setPlayers] = useState<PlayerName[]>([]);
+    const [players, setPlayers] = useState<PlayerName[]>([
+        "kobe", "mark", "jan", "mama", "papa", "tiboon", "lorenn"
+    ]);
     const [newPlayer, setNewPlayer] = useState<PlayerName>("");
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>("");
@@ -34,7 +36,15 @@ export default function HostSetupPage() {
     const [newRoleName, setNewRoleName] = useState<string>("");
     const [newRoleCount, setNewRoleCount] = useState<number>(1);
 
+    const [questions, setQuestions] = useState<Question[]>([
+        { key: "alcohol", question: "Drinkt ge dit spel alcohol?" },
+        { key: "bier", question: "Drinkt ge dit spel bier?" },
+    ]);
+    const [newQuestionKey, setNewQuestionKey] = useState<string>("");
+    const [newQuestionText, setNewQuestionText] = useState<string>("");
+
     const roleNameInputRef = useRef<HTMLInputElement>(null);
+    const questionKeyInputRef = useRef<HTMLInputElement>(null);
 
     const addPlayer = () => {
         if (!newPlayer.trim()) return;
@@ -63,6 +73,35 @@ export default function HostSetupPage() {
         setRoles(roles.filter((_, i) => i !== index));
     };
 
+    const addQuestion = () => {
+        if (!newQuestionKey.trim() || !newQuestionText.trim()) {
+            setError("Vul zowel key als vraag in");
+            return;
+        }
+        
+        // Check of key geen spaties bevat
+        if (newQuestionKey.includes(" ")) {
+            setError("Key mag geen spaties bevatten. Gebruik underscore (_)");
+            return;
+        }
+
+        // Check of key al bestaat
+        if (questions.find((q) => q.key === newQuestionKey)) {
+            setError("Deze key bestaat al");
+            return;
+        }
+
+        setQuestions([...questions, { key: newQuestionKey, question: newQuestionText }]);
+        setNewQuestionKey("");
+        setNewQuestionText("");
+        setError("");
+        questionKeyInputRef.current?.focus();
+    };
+
+    const removeQuestion = (index: number) => {
+        setQuestions(questions.filter((_, i) => i !== index));
+    };
+
     const onDragEnd = (result: DropResult) => {
         if (!result.destination) return;
         const newRoles = Array.from(roles);
@@ -83,6 +122,7 @@ export default function HostSetupPage() {
                 players,
                 settings,
                 roles,
+                questions,
             });
 
             navigate(`/host/${res.code}`);
@@ -256,6 +296,54 @@ export default function HostSetupPage() {
                                         )}
                                     </Droppable>
                                 </DragDropContext>
+                            </div>
+                        </div>
+
+                        {/* Questions sectie - NIEUW */}
+                        <div className="mt-6">
+                            <h3 className="text-xl font-bold text-white mb-4">Vragen (Ja/Nee)</h3>
+                            <p className="text-slate-400 text-sm mb-3">
+                                Deze vragen krijgen spelers bij het begin van het spel. Gebruik dit om later specifieke spelers te kunnen selecteren.
+                            </p>
+                            
+                            <div className="flex gap-2 mb-4">
+                                <Input
+                                    ref={questionKeyInputRef}
+                                    placeholder="Key (bijv. alcohol)"
+                                    value={newQuestionKey}
+                                    onChange={(e) => setNewQuestionKey(e.target.value.toLowerCase().replace(/ /g, "_"))}
+                                    onKeyDown={(e) => e.key === "Enter" && addQuestion()}
+                                    className="bg-slate-900/50 border-purple-500/30 text-white w-48"
+                                />
+                                <Input
+                                    placeholder="Vraag (bijv. Drinkt ge alcohol?)"
+                                    value={newQuestionText}
+                                    onChange={(e) => setNewQuestionText(e.target.value)}
+                                    onKeyDown={(e) => e.key === "Enter" && addQuestion()}
+                                    className="bg-slate-900/50 border-purple-500/30 text-white flex-1"
+                                />
+                                <Button onClick={addQuestion} className="bg-green-600 hover:bg-green-700">
+                                    <Plus className="h-5 w-5" />
+                                </Button>
+                            </div>
+
+                            <div className="space-y-2 max-h-48 overflow-y-auto">
+                                {questions.map((q, index) => (
+                                    <div key={index} className="flex items-center gap-2 bg-slate-900/50 p-3 rounded">
+                                        <div className="flex-1">
+                                            <span className="text-purple-400 font-mono text-sm">{q.key}</span>
+                                            <span className="text-white ml-3">{q.question}</span>
+                                        </div>
+                                        <Button
+                                            onClick={() => removeQuestion(index)}
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
                             </div>
                         </div>
 

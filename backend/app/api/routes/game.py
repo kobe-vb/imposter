@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.api.ws.monitor import broadcast_player
 from app.dependencies import get_game
-from app.schemas.schemas import AssignTaskRequest, CommendRequest, CreateGameRequest, CreateGameResponse, Player, PlayerName, ResponseSuccess, ReviveRequest, RoleRequest, TaskRequest
+from app.schemas.schemas import AssignTaskRequest, CommendRequest, CreateGameRequest, CreateGameResponse, Player, PlayerName, Question, ResponseSuccess, ReviveRequest, RoleRequest, TaskRequest
 from app.services.Game import Game
 from app.services.Games import games
 
@@ -12,10 +12,12 @@ router = APIRouter()
 @router.post("/create", response_model=CreateGameResponse)
 def create_game(payload: CreateGameRequest):
     try:
+        print(payload)
         code = games.create_game(
             payload.players,
             payload.settings,
-            payload.roles
+            payload.roles,
+            payload.questions
         )
     except ValueError as e:
         raise HTTPException(
@@ -64,3 +66,7 @@ def new_round(game: Game = Depends(get_game)):
 def reset_game(game: Game = Depends(get_game)):
     game.reset()
     return ResponseSuccess(success=True)
+
+@router.get("/{code}/questions", response_model=list[Question])
+def get_questions(game: Game = Depends(get_game)):
+    return game.questions

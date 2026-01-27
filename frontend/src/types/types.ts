@@ -6,6 +6,8 @@ export type Player = {
   role?: string;
   task?: string;
   commend?: string;
+  haveVoted?: boolean;
+  questions?: string[];
 };
 
 export type Role = { name: string; count: number };
@@ -16,6 +18,13 @@ export type GameSettings = {
   infoDisplayTime: number;
   tasksPerRound: number;
 };
+
+export type Question = { key: string; question: string };
+
+export interface PlayerAnswers {
+  answered: boolean;
+  answers: Record<string, boolean>;  // key: question key, value: answer
+}
 
 export type TasksResponse = {
   tasks: string[];

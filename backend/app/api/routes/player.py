@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from app.api.ws.monitor import broadcast_player
 from app.dependencies import get_game
-from app.schemas.schemas import CommendRequest, Player, PlayerName, ReviveRequest, RoleRequest, TaskRequest
+from app.schemas.schemas import CommendRequest, Player, PlayerName, ResponseSuccess, ReviveRequest, RoleRequest, TaskRequest, VoteRequest
 from app.services.Game import Game
 
 router = APIRouter()
@@ -34,3 +34,9 @@ def kill_player(player: PlayerName, game: Game = Depends(get_game)):
 @router.post("/{code}/revive", response_model=list[Player])
 def revive_player(request: ReviveRequest, game: Game = Depends(get_game)):
     return game.revive_player(request.name)
+
+
+@router.post("/{code}/{player}/questions", response_model=ResponseSuccess)
+def add_question(player: PlayerName, request: VoteRequest, game: Game = Depends(get_game)):
+    game.add_question(player, request.questions)
+    return ResponseSuccess(success=True)

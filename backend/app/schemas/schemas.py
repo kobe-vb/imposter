@@ -8,6 +8,12 @@ class Player(BaseModel):
     role: str | None = None
     task: str | None = None
     commend: str | None = None
+    haveVoted: bool = False
+    questions: list[str] | None = None
+
+    def set_questions(self, questions: list[str]):
+        self.questions = questions
+        self.haveVoted = True
 
 type PlayerName = str
     
@@ -21,10 +27,15 @@ class RoleInfo(BaseModel):
     name: str
     count: int
     
+class Question(BaseModel):
+    key: str
+    question: str
+    
 class CreateGameRequest(BaseModel):
     players: List[PlayerName]
     settings: GameSettings
     roles: List[RoleInfo]
+    questions: List[Question]
     
 class AssignTaskRequest(BaseModel):
     task: str
@@ -44,6 +55,9 @@ class RoleRequest(BaseModel):
 
 class CommendRequest(BaseModel):
     commend: str
+    
+class VoteRequest(BaseModel):
+    questions: List[str]
 
 class ReviveRequest(BaseModel):
     name: PlayerName
