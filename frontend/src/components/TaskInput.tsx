@@ -1,22 +1,23 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 
-interface TaskInputProps {
-    value: string;
-    onChange: (value: string) => void;
-    onSubmit: () => void;
-    placeholder?: string;
-}
-
 const SUGGESTIONS = [
     { label: "{player}", detail: "Random speler" },
     { label: "{player:alive}", detail: "Levende speler" },
     { label: "{player:dead}", detail: "Dode speler" },
     { label: '{? "", "" }', detail: "Random keuze", cursorOffset: -7 },
-    { label: '{self}', detail: "gekoze speler"},
+    { label: '{self}', detail: "gekoze speler" },
 ];
 
-export default function TaskInput({ value, onChange, onSubmit, placeholder }: TaskInputProps) {
+interface TaskInputProps {
+    value: string;
+    onChange: (value: string) => void;
+    onSubmit: () => void;
+    placeholder?: string;
+    externalSuggestions?: typeof SUGGESTIONS;
+}
+
+export default function TaskInput({ value, onChange, onSubmit, placeholder, externalSuggestions }: TaskInputProps) {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -27,12 +28,12 @@ export default function TaskInput({ value, onChange, onSubmit, placeholder }: Ta
 
         const cursorPos = textarea.selectionStart || 0;
         const textBeforeCursor = value.slice(0, cursorPos);
-        
+
         const lastBraceIndex = textBeforeCursor.lastIndexOf("{");
-        
+
         const textAfterBrace = value.slice(lastBraceIndex + 1);
         const hasClosingBrace = textAfterBrace.includes("}");
-        
+
         if (lastBraceIndex !== -1 && !hasClosingBrace) {
             setShowSuggestions(true);
             setSelectedIndex(0);
@@ -43,22 +44,23 @@ export default function TaskInput({ value, onChange, onSubmit, placeholder }: Ta
 
     const getFilteredSuggestions = () => {
         const textarea = textareaRef.current;
-        if (!textarea) return SUGGESTIONS;
+        if (!textarea) return [...SUGGESTIONS, ...(externalSuggestions || [])];
 
         const cursorPos = textarea.selectionStart || 0;
         const textBeforeCursor = value.slice(0, cursorPos);
         const lastBraceIndex = textBeforeCursor.lastIndexOf("{");
-        
-        if (lastBraceIndex === -1) return SUGGESTIONS;
-        
+
+        if (lastBraceIndex === -1) return [...SUGGESTIONS, ...(externalSuggestions || [])];
+
         const searchTerm = textBeforeCursor.slice(lastBraceIndex + 1).toLowerCase();
-        
-        if (!searchTerm) return SUGGESTIONS;
-        
-        return SUGGESTIONS.filter(s => 
-            s.label.toLowerCase().includes(searchTerm)
-        );
+
+        const combined = [...SUGGESTIONS, ...(externalSuggestions || [])];
+
+        if (!searchTerm) return combined;
+
+        return combined.filter(s => s.label.toLowerCase().includes(searchTerm));
     };
+
 
     const filteredSuggestions = getFilteredSuggestions();
 
@@ -69,9 +71,9 @@ export default function TaskInput({ value, onChange, onSubmit, placeholder }: Ta
         const cursorPos = textarea.selectionStart;
         const textBeforeCursor = value.slice(0, cursorPos);
         const textAfter = value.slice(cursorPos);
-        
+
         const lastBraceIndex = textBeforeCursor.lastIndexOf("{");
-        
+
         const textBefore = value.slice(0, lastBraceIndex);
         const newText = textBefore + suggestion.label + textAfter;
         onChange(newText);
@@ -121,14 +123,14 @@ export default function TaskInput({ value, onChange, onSubmit, placeholder }: Ta
             const viewportHeight = window.innerHeight;
             const spaceBelow = viewportHeight - rect.bottom;
             const spaceAbove = rect.top;
-            
+
             const showAbove = spaceBelow < 200 && spaceAbove > spaceBelow;
-            
+
             setDropdownStyle({
                 position: 'fixed',
                 left: `${rect.left}px`,
                 width: `${rect.width}px`,
-                ...(showAbove 
+                ...(showAbove
                     ? { bottom: `${viewportHeight - rect.top + 4}px` }
                     : { top: `${rect.bottom + 4}px` }
                 ),
@@ -160,7 +162,7 @@ export default function TaskInput({ value, onChange, onSubmit, placeholder }: Ta
 
             {/* Autocomplete dropdown - RENDERED AS PORTAL - ALWAYS ON TOP */}
             {showSuggestions && filteredSuggestions.length > 0 && createPortal(
-                <div 
+                <div
                     className="bg-slate-800 border-2 border-blue-500 rounded-lg shadow-2xl overflow-y-auto"
                     style={{
                         ...dropdownStyle,
@@ -170,11 +172,10 @@ export default function TaskInput({ value, onChange, onSubmit, placeholder }: Ta
                     {filteredSuggestions.map((suggestion, index) => (
                         <div
                             key={index}
-                            className={`px-4 py-3 cursor-pointer transition-colors ${
-                                index === selectedIndex
-                                    ? "bg-blue-600 text-white"
-                                    : "hover:bg-slate-700 text-slate-200"
-                            }`}
+                            className={`px-4 py-3 cursor-pointer transition-colors ${index === selectedIndex
+                                ? "bg-blue-600 text-white"
+                                : "hover:bg-slate-700 text-slate-200"
+                                }`}
                             onClick={() => insertSuggestion(suggestion)}
                             onMouseEnter={() => setSelectedIndex(index)}
                         >

@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import TaskInput from "./TaskInput";
+import type { Stat } from "@/types/types";
 
 interface TaskManagerProps {
   items: string[];
   onAdd: (item: string) => Promise<void>;
   onDelete: (item: string) => Promise<void>;
   placeholder?: string;
+  stats: Stat[];
 }
 
 export default function TaskManager({
@@ -14,6 +16,7 @@ export default function TaskManager({
   onAdd,
   onDelete,
   placeholder = "Nieuwe item toevoegen...",
+  stats
 }: TaskManagerProps) {
   const [newItem, setNewItem] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +53,7 @@ export default function TaskManager({
           onChange={(v) => { setNewItem(v); if (error) setError(null); }}
           onSubmit={handleAdd}
           placeholder={placeholder}
+          externalSuggestions={stats}
         />
 
         <button

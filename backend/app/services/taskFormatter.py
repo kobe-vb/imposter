@@ -5,13 +5,9 @@ from app.schemas.schemas import Player
 
 
 class TaskFormatter:
-    PLAYER_REGEX = re.compile(
-        r"\{(player|player:alive|player:dead|self)\}"
-    )
-
-    RANDOM_TEXT_REGEX = re.compile(
-        r"\{\?\s*(?:\"[^\"]+\"(?:\s*,\s*|\s+))*\"[^\"]+\"\s*\}"
-    )
+    
+    PLAYER_REGEX = re.compile(r"\{player:([^}]+)\}|\{player\}|\{self\}")
+    RANDOM_TEXT_REGEX = re.compile(r"\{\?\s*(?:\"[^\"]+\"(?:\s*,\s*|\s+))*\"[^\"]+\"\s*\}")
 
     def __init__(self, players: list[Player]):
         self.players = players
@@ -45,25 +41,32 @@ class TaskFormatter:
         player_name: str
     ) -> str:
         
-        token = match.group(1)
+        token = match.group(0).strip("{}")
+        
+        print(token)
 
         if token == "self":
             return player_name
 
-        if token == "player:alive":
+        elif token == "player":
+            pool = self.players
+        elif token == "player:alive":
             pool = [p for p in self.players if p.alive]
-
         elif token == "player:dead":
             pool = [p for p in self.players if not p.alive]
-
-        else:  # {player}
-            pool = self.players
-
+        else:
+            key = token.split(":")[1]
+            if '!' in key:
+                pool = [p for p in self.players if key not in p.questions]
+            else:
+                pool = [p for p in self.players if key in p.questions]
+            
         available = [p for p in pool if p.name not in used_players]
         if not available:
             self.failed = True
             return "niemand"
 
+        print(available)
         chosen = random.choice(available).name
         used_players.add(chosen)
         return chosen

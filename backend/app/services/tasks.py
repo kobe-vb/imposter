@@ -46,8 +46,13 @@ class Tasks:
             return "geen opdrachten gevonden"
         
         new_task: Optional[str] = self.formatter.format(random.choice(self.tasks), player)
-        while new_task is None:
+        for _ in range(10):
             new_task = self.formatter.format(random.choice(self.tasks), player)
+            if new_task is not None:
+                break
+        if new_task is None:
+            new_task = "geen opdrachten gevonden"
+        print(new_task)
         return new_task
 
     def remove_task(self, task: str) -> list[str]:

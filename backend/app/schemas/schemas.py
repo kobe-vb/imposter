@@ -9,8 +9,8 @@ class Player(BaseModel):
     task: str | None = None
     commend: str | None = None
     haveVoted: bool = False
-    questions: list[str] | None = None
-
+    questions: list[str] = Field(default_factory=list)
+    
     def set_questions(self, questions: list[str]):
         self.questions = questions
         self.haveVoted = True

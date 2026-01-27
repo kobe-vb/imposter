@@ -1,12 +1,18 @@
 import { api } from "@/api/api";
-import type { Player } from "@/types/types";
+import type { Player, Stat } from "@/types/types";
 import { useEffect, useMemo, useState } from "react";
+
+interface Question {
+    key: string;
+    question: string;
+}
 
 export function useGameData(gameCode: string | undefined) {
     const [players, setPlayers] = useState<Player[]>([]);
     const [availableTasks, setAvailableTasks] = useState<string[]>([]);
     const [availableHandicaps, setAvailableHandicaps] = useState<string[]>([]);
     const [availableRoles, setAvailableRoles] = useState<string[]>([]);
+    const [stats, setStats] = useState<Stat[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -26,17 +32,25 @@ export function useGameData(gameCode: string | undefined) {
         setError(null);
 
         try {
-            const [playersData, tasksData, handicapsData, rolesData] = await Promise.all([
+            const [playersData, tasksData, handicapsData, rolesData, questions] = await Promise.all([
                 api.get<Player[]>(`/game/${gameCode}/players`),
                 api.get<string[]>(`/game/${gameCode}/tasks`),
                 api.get<string[]>(`/game/${gameCode}/handicaps`),
-                api.get<string[]>(`/game/${gameCode}/roles`)
+                api.get<string[]>(`/game/${gameCode}/roles`),
+                api.get<Question[]>(`/game/${gameCode}/questions`)
             ]);
 
             setPlayers(playersData);
             setAvailableTasks(tasksData);
             setAvailableHandicaps(handicapsData);
             setAvailableRoles(rolesData);
+
+            const questionSuggestions = questions.flatMap(q => [
+                { label: `{player:${q.key}}`, detail: q.question },
+                { label: `{player:!${q.key}}`, detail: `Niet "${q.question}"` }
+            ]);
+
+            setStats(questionSuggestions);
         } catch (err) {
             setError('Fout bij het laden van data');
             console.error('Error fetching data:', err);
@@ -60,6 +74,7 @@ export function useGameData(gameCode: string | undefined) {
         loading,
         error,
         gameStats,
+        stats,
         refetch: fetchInitialData
     };
 }

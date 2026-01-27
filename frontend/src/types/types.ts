@@ -37,3 +37,10 @@ export type PlayersResponse = {
 export type CreateGameResponse = {
   code: string;
 };
+
+
+export type Stat = {
+  label: string;
+  detail: string;
+  cursorOffset?: number;
+}

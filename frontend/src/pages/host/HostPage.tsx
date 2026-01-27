@@ -24,6 +24,7 @@ export default function HostPage() {
     loading,
     error,
     gameStats,
+    stats,
     refetch
   } = useGameData(gameCode);
 
@@ -162,6 +163,7 @@ export default function HostPage() {
                 onAdd={handleAddTask}
                 onDelete={handleDeleteTask}
                 placeholder="Nieuwe taak toevoegen..."
+                stats={stats}
               />
             </AnimatedCollapsibleSection>
 
@@ -179,6 +181,7 @@ export default function HostPage() {
                 onAdd={handleAddHandicap}
                 onDelete={handleDeleteHandicap}
                 placeholder="Nieuwe handicap toevoegen..."
+                stats={stats}
               />
             </AnimatedCollapsibleSection>
           </>
@@ -201,6 +204,7 @@ export default function HostPage() {
               onChange={setNewTask}
               placeholder="Voer taak in..."
               onSubmit={handleSubmitTask}
+              externalSuggestions={stats}
             />
 
             <select
