@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Skull, Plus, X, Repeat } from 'lucide-react';
 import type { Player } from '@/types/types';
+import PlayerInfoPopover from './PlayerInfoPopover';
 
 type EditMode = 'task' | 'role' | 'commend' | null;
 
@@ -52,11 +53,12 @@ export default function PlayerCard({
 
   return (
     <div
-      className={`border rounded-lg p-4 flex flex-col justify-center ${player.alive
+      className={`relative border rounded-lg p-4 flex flex-col justify-center ${player.alive
         ? 'bg-slate-900/50 border-slate-700'
         : 'bg-gray-800/30 border-gray-700'
         }`}
     >
+
       {/* PLAYER INFO */}
       <div className="text-center mb-4">
         <p
@@ -69,6 +71,10 @@ export default function PlayerCard({
           {player.role || 'burger'}
         </p>
       </div>
+      <div className="absolute top-2 right-2">
+        <PlayerInfoPopover player={player} />
+      </div>
+
 
       {/* EDIT MODE (TASK / ROLE) */}
       {isEditing && adminMode && (
@@ -138,6 +144,20 @@ export default function PlayerCard({
                     <Plus className="h-4 w-4" />
                     Commend
                   </button>
+
+                  {/* Questions */}
+                  {player.questions && player.questions.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {player.questions!.map((q, idx) => (
+                        <span
+                          key={idx}
+                          className="bg-slate-700 text-white text-xs px-2 py-1 rounded-full"
+                        >
+                          {q}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </>
               )}
             </>
@@ -153,6 +173,9 @@ export default function PlayerCard({
           )}
         </div>
       )}
+
+
+
     </div>
   );
 }
