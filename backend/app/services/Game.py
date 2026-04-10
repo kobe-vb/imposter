@@ -126,7 +126,7 @@ class Game:
             if p.alive and p.role != "imposter"
         ]
         
-        num_tasks = min(self.settings.tasksPerRound, len(alive_non_imposters))
+        num_tasks = min(random.randint(self.settings.tasksPerRoundMin, self.settings.tasksPerRoundMax), len(alive_non_imposters))
         chosen_players = random.sample(alive_non_imposters, num_tasks)
 
         for player in chosen_players:

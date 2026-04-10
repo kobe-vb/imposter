@@ -15,7 +15,8 @@ export type Role = { name: string; count: number };
 export type GameSettings = {
   taskTemplate: string;
   infoDisplayTime: number;
-  tasksPerRound: number;
+  tasksPerRoundMin: number;
+  tasksPerRoundMax: number;
 };
 
 export type Question = { key: string; question: string };

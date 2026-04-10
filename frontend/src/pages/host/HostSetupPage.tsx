@@ -9,7 +9,8 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import type { DropResult } from "@hello-pangea/dnd";
-
+import { Slider } from "@/components/ui/slider";
+import { useEffect } from "react";
 
 export default function HostSetupPage() {
     const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function HostSetupPage() {
     const [players, setPlayers] = useState<PlayerName[]>([
         "kobe", "mark", "jan", "mama", "papa", "tiboon", "lorenn"
     ]);
+    // const [players, setPlayers] = useState<PlayerName[]>([]);
     const [newPlayer, setNewPlayer] = useState<PlayerName>("");
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>("");
@@ -24,7 +26,8 @@ export default function HostSetupPage() {
     const [settings, setSettings] = useState<GameSettings>({
         taskTemplate: "leden",
         infoDisplayTime: 5,
-        tasksPerRound: 2,
+        tasksPerRoundMin: 2,
+        tasksPerRoundMax: 5,
     });
 
     const [roles, setRoles] = useState<Role[]>([
@@ -77,7 +80,7 @@ export default function HostSetupPage() {
             setError("Vul zowel key als vraag in");
             return;
         }
-        
+
         // Check of key geen spaties bevat
         if (newQuestionKey.includes(" ")) {
             setError("Key mag geen spaties bevatten. Gebruik underscore (_)");
@@ -131,6 +134,27 @@ export default function HostSetupPage() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        setSettings((prev) => {
+            let min = prev.tasksPerRoundMin;
+            let max = prev.tasksPerRoundMax;
+
+            if (max > players.length) {
+                max = players.length;
+            }
+
+            if (min > max) {
+                min = max;
+            }
+
+            return {
+                ...prev,
+                tasksPerRoundMin: min,
+                tasksPerRoundMax: max,
+            };
+        });
+    }, [players.length]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
@@ -198,13 +222,23 @@ export default function HostSetupPage() {
                                         className="bg-slate-900/50 border-purple-500/30 text-white w-full"
                                     />
 
-                                    <label className="text-slate-300 text-sm mt-2">tasks per round</label>
-                                    <Input
-                                        type="number"
-                                        value={settings.tasksPerRound}
+                                    <label className="text-slate-300 text-sm mt-2">
+                                        Tasks per round ({settings.tasksPerRoundMin} - {settings.tasksPerRoundMax})
+                                    </label>
+
+                                    <Slider
                                         min={1}
-                                        onChange={(e) => setSettings({ ...settings, tasksPerRound: parseInt(e.target.value) })}
-                                        className="bg-slate-900/50 border-purple-500/30 text-white w-full"
+                                        max={players.length}
+                                        step={1}
+                                        value={[settings.tasksPerRoundMin, settings.tasksPerRoundMax]}
+                                        onValueChange={([min, max]) => {
+                                            setSettings((prev) => ({
+                                                ...prev,
+                                                tasksPerRoundMin: min,
+                                                tasksPerRoundMax: max,
+                                            }));
+                                        }}
+                                        className="mt-2"
                                     />
 
                                 </div>
@@ -289,13 +323,18 @@ export default function HostSetupPage() {
                             </div>
                         </div>
 
-                        {/* Questions sectie - NIEUW */}
+                        {error && (
+                            <Alert className="mt-4 bg-red-500/10 border-red-500/50 text-red-200">
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
+                        )}
+
                         <div className="mt-6">
                             <h3 className="text-xl font-bold text-white mb-4">Vragen (Ja/Nee)</h3>
                             <p className="text-slate-400 text-sm mb-3">
                                 Deze vragen krijgen spelers bij het begin van het spel. Gebruik dit om later specifieke spelers te kunnen selecteren.
                             </p>
-                            
+
                             <div className="flex gap-2 mb-4">
                                 <Input
                                     ref={questionKeyInputRef}
@@ -336,12 +375,6 @@ export default function HostSetupPage() {
                                 ))}
                             </div>
                         </div>
-
-                        {error && (
-                            <Alert className="mt-4 bg-red-500/10 border-red-500/50 text-red-200">
-                                <AlertDescription>{error}</AlertDescription>
-                            </Alert>
-                        )}
 
                         <div className="flex gap-3 mt-6">
                             <Button
