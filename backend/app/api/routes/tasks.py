@@ -1,4 +1,4 @@
-from http.client import HTTPException
+from fastapi import HTTPException
 from fastapi import APIRouter, Depends, status
 
 from app.dependencies import get_game

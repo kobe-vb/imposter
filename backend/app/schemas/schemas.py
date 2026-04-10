@@ -19,7 +19,6 @@ type PlayerName = str
     
 class GameSettings(BaseModel):
     taskTemplate: str
-    taskTime: int
     infoDisplayTime: int
     tasksPerRound: int
 

@@ -1,1 +1,7 @@
 hou {player:dead} zij/haar {? "linke", "rechter" } hand vast tot de game stopt
+{self} ge mag niet meer alleen rond lopen, zorg er voor dat ge altijd iemand aanraakt
+{self} ge loopt alleen nog maar acteruit
+oei, {self} ge zijd blind geworden
+doe alles in slow motion
+jow, {self} ge mag niet meer spreken :(
+doe elke ronde eerst 10 toertjes rond uw as

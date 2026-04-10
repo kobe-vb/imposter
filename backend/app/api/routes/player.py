@@ -10,7 +10,6 @@ router = APIRouter()
 @router.get("/{code}/{player}/info", response_model=Player)
 async def get_player(player: str, game: Game = Depends(get_game)):
     player_obj: Player = game.get_player(player)
-
     await broadcast_player(game.code, player)
     return player_obj
 

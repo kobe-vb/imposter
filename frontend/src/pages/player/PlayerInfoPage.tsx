@@ -27,12 +27,15 @@ export default function PlayerInfoPage() {
         const data: Player = await api.get(`/player/${gameCode}/${playerName}/info`);
         setPlayer(data);
 
-        // Als haveVoted false is, haal de questions op
         if (data.haveVoted === false) {
           setLoadingQuestions(true);
           const qData: Question[] = await api.get(`/game/${gameCode}/questions`);
           setQuestions(qData);
           setLoadingQuestions(false);
+          if (qData.length === 0) {
+            setTimer(5);
+            setPlayer({ ...data, haveVoted: true });
+          }
         } else {
           setTimer(5); // start de normale countdown
         }
@@ -145,7 +148,7 @@ export default function PlayerInfoPage() {
           )}
           {player.task && (
             <div className="bg-white/10 rounded-xl p-4 text-left">
-              <h3 className="font-semibold mb-1 text-lg">Task</h3>
+              <h3 className="font-semibold mb-1 text-lg">{player.alive ? "Task" : "Handicap"}</h3>
               <p className="text-white/90 text-base">{player.task}</p>
             </div>
           )}

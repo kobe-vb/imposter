@@ -8,6 +8,7 @@ import TaskInput from '@/components/TaskInput';
 import { useGameData } from '@/hooks/useGameData';
 import { useGameActions } from '@/hooks/useGameActions';
 import AnimatedCollapsibleSection from '@/components/AnimatedCollapsibleSection';
+import RoundTimer from '@/components/Roundtimer';
 
 
 export default function HostPage() {
@@ -186,6 +187,10 @@ export default function HostPage() {
             </AnimatedCollapsibleSection>
           </>
         )}
+
+        <RoundTimer duration={5 * 60} />
+
+
         {/* New Round Button */}
         <div className="bg-slate-800/50 backdrop-blur border border-purple-500/20 rounded-lg">
           <div className='p-4'>
@@ -194,7 +199,7 @@ export default function HostPage() {
               disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg rounded-lg font-semibold transition-colors disabled:opacity-50"
             >
-              {loading ? 'Laden...' : 'Nieuwe Ronde'}
+              {loading ? 'Laden...' : 'Assign new roles'}
             </button>
           </div>
           {/* New Task Section */}

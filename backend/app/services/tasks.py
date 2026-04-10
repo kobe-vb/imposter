@@ -52,7 +52,6 @@ class Tasks:
                 break
         if new_task is None:
             new_task = "geen opdrachten gevonden"
-        print(new_task)
         return new_task
 
     def remove_task(self, task: str) -> list[str]:

@@ -18,7 +18,8 @@ origins = [
     "http://localhost:5173",  # Vite dev server
     "http://192.168.68.112:5173",
     "http://192.168.184.13:5173",
-    "http://192.168.185.235:5173"
+    "http://192.168.185.235:5173",
+    "http://192.168.188.83:5173"
 ]
 
 app.add_middleware(
@@ -81,3 +82,22 @@ else:
             "message": "Run 'npm run build' in the frontend directory first",
             "path_checked": str(frontend_dist)
         }
+        
+        
+
+def get_local_ip():
+    import socket
+    
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    finally:
+        s.close()
+    return ip
+
+@app.on_event("startup")
+async def startup_event():
+    ip = get_local_ip()
+    print(f"➡ Local:   http://localhost:8000")
+    print(f"➡ Network: http://{ip}:8000")

@@ -42,8 +42,6 @@ class TaskFormatter:
     ) -> str:
         
         token = match.group(0).strip("{}")
-        
-        print(token)
 
         if token == "self":
             return player_name
@@ -66,7 +64,6 @@ class TaskFormatter:
             self.failed = True
             return "niemand"
 
-        print(available)
         chosen = random.choice(available).name
         used_players.add(chosen)
         return chosen

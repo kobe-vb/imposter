@@ -23,7 +23,6 @@ export default function HostSetupPage() {
 
     const [settings, setSettings] = useState<GameSettings>({
         taskTemplate: "leden",
-        taskTime: 5,
         infoDisplayTime: 5,
         tasksPerRound: 2,
     });
@@ -189,15 +188,6 @@ export default function HostSetupPage() {
                                         <option value="leden">leden</option>
                                         <option value="leiding">leiding</option>
                                     </select>
-
-                                    <label className="text-slate-300 text-sm mt-2">Task Tijd (in minuten)</label>
-                                    <Input
-                                        type="number"
-                                        value={settings.taskTime}
-                                        min={1}
-                                        onChange={(e) => setSettings({ ...settings, taskTime: parseInt(e.target.value) })}
-                                        className="bg-slate-900/50 border-purple-500/30 text-white w-full"
-                                    />
 
                                     <label className="text-slate-300 text-sm mt-2">time to display player info (in seconds)</label>
                                     <Input

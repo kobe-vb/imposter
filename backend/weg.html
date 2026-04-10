@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<title>IRL Swipe</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1e1e1e;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0f0f0;
+    --muted: #888;
+    --like: #22c55e;
+    --dislike: #ef4444;
+    --accent: #f0f0f0;
+    --font: 'DM Sans', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); font-family: var(--font); color: var(--text); }
+  
+  /* Google Font */
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  /* SCREENS */
+  .screen { position: fixed; inset: 0; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; overflow: hidden; }
+  .screen.active { opacity: 1; pointer-events: all; }
+
+  /* HEADER */
+  .header { padding: 52px 20px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+  .header .subtitle { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  /* BUTTONS */
+  .btn { border: none; border-radius: 14px; font-family: var(--font); font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--text); color: var(--bg); padding: 14px 24px; width: 100%; }
+  .btn-secondary { background: var(--surface2); color: var(--text); padding: 14px 24px; width: 100%; border: 1px solid var(--border); }
+  .btn-ghost { background: transparent; color: var(--muted); padding: 10px 16px; font-size: 13px; }
+  .btn-icon { background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 50%; width: 44px; height: 44px; font-size: 18px; flex-shrink: 0; }
+
+  /* ===== GALLERY PAGE ===== */
+  #gallery { background: var(--bg); }
+  .gallery-header { padding: 52px 20px 0; }
+  .gallery-header .app-name { font-size: 28px; font-weight: 600; letter-spacing: -1px; }
+  .gallery-header .photo-count { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  .gallery-scroll { flex: 1; overflow-y: auto; padding: 16px 20px 120px; }
+  .gallery-scroll::-webkit-scrollbar { display: none; }
+
+  .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .photo-cell { position: relative; aspect-ratio: 3/4; border-radius: 16px; overflow: hidden; background: var(--surface); }
+  .photo-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-cell .stats-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 10px 10px; background: linear-gradient(transparent, rgba(0,0,0,0.7)); display: flex; gap: 8px; }
+  .photo-cell .stat { font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 3px; }
+  .stat-like { color: var(--like); }
+  .stat-dislike { color: var(--dislike); }
+  .photo-cell .del-btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.5); border: none; color: white; border-radius: 50%; width: 28px; height: 28px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+  .photo-cell .del-btn:hover { background: rgba(239,68,68,0.8); }
+
+  .upload-cell { aspect-ratio: 3/4; border-radius: 16px; border: 1.5px dashed var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; color: var(--muted); font-size: 13px; transition: border-color 0.2s, color 0.2s; }
+  .upload-cell:hover { border-color: rgba(255,255,255,0.25); color: var(--text); }
+  .upload-cell .plus { font-size: 28px; line-height: 1; }
+  #file-input { display: none; }
+
+  .gallery-footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 16px 20px 32px; background: linear-gradient(transparent, var(--bg) 40%); display: flex; gap: 10px; }
+  .gallery-footer .btn-primary { flex: 1; }
+  .gallery-footer .btn-icon { flex-shrink: 0; }
+
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 12px; color: var(--muted); padding: 40px; text-align: center; }
+  .empty-icon { font-size: 48px; opacity: 0.3; }
+  .empty-state p { font-size: 14px; line-height: 1.6; }
+
+  /* ===== SWIPE PAGE ===== */
+  #swipe { background: var(--bg); align-items: center; justify-content: center; }
+  .swipe-header { position: absolute; top: 0; left: 0; right: 0; padding: 52px 20px 0; display: flex; align-items: center; justify-content: space-between; z-index: 10; }
+  .swipe-progress { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .swipe-end-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-size: 12px; font-family: var(--font); padding: 8px 14px; border-radius: 20px; cursor: pointer; }
+
+  .card-stack { position: relative; width: calc(100vw - 40px); max-width: 360px; height: 70vh; max-height: 520px; }
+  .swipe-card { position: absolute; inset: 0; border-radius: 24px; overflow: hidden; background: var(--surface); transform-origin: bottom center; transition: none; cursor: grab; user-select: none; box-shadow: 0 24px 80px rgba(0,0,0,0.6); }
+  .swipe-card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+  .swipe-card.is-dragging { cursor: grabbing; }
+  .swipe-card.animate-out { transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s; }
+
+  .vote-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.1s; border-radius: 24px; pointer-events: none; }
+  .vote-overlay.like { background: rgba(34,197,94,0.3); }
+  .vote-overlay.dislike { background: rgba(239,68,68,0.3); }
+  .vote-badge { font-size: 64px; font-weight: 700; letter-spacing: -2px; transform: rotate(-15deg); }
+  .vote-overlay.like .vote-badge { color: var(--like); transform: rotate(-15deg); }
+  .vote-overlay.dislike .vote-badge { color: var(--dislike); transform: rotate(15deg); }
+
+  .swipe-hint { position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%); display: flex; gap: 24px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .swipe-hint span { display: flex; align-items: center; gap: 4px; }
+
+  .swipe-actions { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; z-index: 10; }
+  .action-btn { width: 60px; height: 60px; border-radius: 50%; border: 1.5px solid; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; transition: transform 0.15s, background 0.15s; background: var(--bg); }
+  .action-btn:active { transform: scale(0.9); }
+  .action-like { border-color: var(--like); color: var(--like); }
+  .action-like:hover { background: rgba(34,197,94,0.1); }
+  .action-dislike { border-color: var(--dislike); color: var(--dislike); }
+  .action-dislike:hover { background: rgba(239,68,68,0.1); }
+
+  /* ===== END PAGE ===== */
+  #end { background: var(--bg); justify-content: center; align-items: center; gap: 0; }
+  .end-inner { padding: 40px 32px; display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 380px; }
+  .end-icon { font-size: 64px; margin-bottom: 24px; }
+  .end-title { font-size: 28px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 8px; text-align: center; }
+  .end-subtitle { font-size: 15px; color: var(--muted); text-align: center; margin-bottom: 40px; line-height: 1.6; }
+  .end-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-bottom: 32px; }
+  .end-stat-card { background: var(--surface); border-radius: 16px; padding: 16px; text-align: center; }
+  .end-stat-num { font-size: 32px; font-weight: 600; }
+  .end-stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .stat-like-num { color: var(--like); }
+  .stat-dislike-num { color: var(--dislike); }
+  .end-btns { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+
+  /* ===== QR PAGE ===== */
+  #qr { background: var(--bg); justify-content: center; align-items: center; }
+  .qr-inner { padding: 40px 32px; display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 360px; gap: 0; }
+  .qr-title { font-size: 22px; font-weight: 600; margin-bottom: 8px; text-align: center; }
+  .qr-sub { font-size: 14px; color: var(--muted); text-align: center; margin-bottom: 32px; }
+  .qr-box { background: white; border-radius: 20px; padding: 20px; margin-bottom: 28px; display: flex; align-items: center; justify-content: center; }
+  #qr-canvas { display: block; }
+  .qr-edit { display: flex; width: 100%; gap: 8px; margin-bottom: 24px; }
+  .qr-edit input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; color: var(--text); font-family: var(--font); font-size: 14px; outline: none; }
+  .qr-edit input:focus { border-color: rgba(255,255,255,0.25); }
+  .qr-edit button { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 12px; padding: 12px 16px; font-family: var(--font); font-size: 14px; cursor: pointer; white-space: nowrap; }
+
+  /* ===== SETTINGS PAGE ===== */
+  #settings { background: var(--bg); }
+  .settings-scroll { flex: 1; overflow-y: auto; padding: 16px 20px 80px; }
+  .settings-section { margin-bottom: 28px; }
+  .settings-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; padding-left: 4px; }
+  .settings-row { background: var(--surface); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+  .settings-row:first-of-type { border-radius: 14px 14px 6px 6px; }
+  .settings-row:last-of-type { border-radius: 6px 6px 14px 14px; margin-bottom: 0; }
+  .settings-row:only-child { border-radius: 14px; }
+  .settings-key { font-size: 15px; }
+  .settings-val { font-size: 15px; color: var(--muted); }
+  .settings-input { background: transparent; border: none; color: var(--text); font-family: var(--font); font-size: 15px; text-align: right; outline: none; width: 180px; }
+  .settings-input::placeholder { color: var(--muted); }
+  .danger-btn { background: rgba(239,68,68,0.1); color: var(--dislike); border: none; font-family: var(--font); font-size: 15px; padding: 14px 16px; border-radius: 14px; width: 100%; cursor: pointer; text-align: left; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; white-space: nowrap; z-index: 1000; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* NO PHOTOS */
+  .no-session { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+
+  /* Animations */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-up { animation: fadeUp 0.3s ease forwards; }
+</style>
+</head>
+<body>
+
+<!-- GALLERY -->
+<div class="screen active" id="gallery">
+  <div class="gallery-header">
+    <div class="app-name">IRL Swipe</div>
+    <div class="photo-count" id="photo-count">0 foto's</div>
+  </div>
+  <div class="gallery-scroll" id="gallery-scroll">
+    <div id="gallery-empty" class="empty-state">
+      <div class="empty-icon">📸</div>
+      <p>Upload foto's om te beginnen.<br>Geef je telefoon daarna aan iemand om te swipen.</p>
+    </div>
+    <div class="photo-grid" id="photo-grid" style="display:none;"></div>
+  </div>
+  <div class="gallery-footer">
+    <input type="file" id="file-input" accept="image/*" multiple>
+    <button class="btn btn-primary" id="start-btn" style="display:none;" onclick="startSession()">▶ Start Sessie</button>
+    <label for="file-input" class="btn btn-secondary" id="upload-btn" style="flex:1; cursor:pointer;">
+      + Upload foto's
+    </label>
+    <button class="btn btn-icon" onclick="showScreen('settings')" title="Instellingen">⚙</button>
+  </div>
+</div>
+
+<!-- SWIPE -->
+<div class="screen" id="swipe">
+  <div class="swipe-header">
+    <span class="swipe-progress" id="swipe-progress">1 / 5</span>
+    <button class="swipe-end-btn" onclick="endSession()">Stoppen ↑</button>
+  </div>
+  <div class="card-stack" id="card-stack">
+    <!-- Cards injected here -->
+  </div>
+  <div class="swipe-actions" style="position:fixed;bottom:40px;">
+    <button class="action-btn action-dislike" onclick="triggerVote('dislike')">✕</button>
+    <button class="action-btn action-like" onclick="triggerVote('like')">♥</button>
+  </div>
+</div>
+
+<!-- END SCREEN -->
+<div class="screen" id="end">
+  <div class="end-inner">
+    <div class="end-icon">🎉</div>
+    <div class="end-title">Sessie klaar!</div>
+    <div class="end-subtitle" id="end-subtitle">Je hebt door alle foto's gezwiped.</div>
+    <div class="end-stats">
+      <div class="end-stat-card">
+        <div class="end-stat-num stat-like-num" id="end-likes">0</div>
+        <div class="end-stat-label">Likes</div>
+      </div>
+      <div class="end-stat-card">
+        <div class="end-stat-num stat-dislike-num" id="end-dislikes">0</div>
+        <div class="end-stat-label">Dislikes</div>
+      </div>
+    </div>
+    <div class="end-btns">
+      <button class="btn btn-primary" onclick="showScreen('qr')">QR-code tonen</button>
+      <button class="btn btn-secondary" onclick="startSession()">Nieuwe sessie</button>
+      <button class="btn btn-ghost" onclick="showScreen('gallery')">Terug naar gallery</button>
+    </div>
+  </div>
+</div>
+
+<!-- QR SCREEN -->
+<div class="screen" id="qr">
+  <div class="qr-inner">
+    <div class="qr-title">Contact delen</div>
+    <div class="qr-sub">Scan voor mijn Instagram (of andere link)</div>
+    <div class="qr-box">
+      <canvas id="qr-canvas"></canvas>
+    </div>
+    <div class="qr-edit">
+      <input type="url" id="qr-url-input" placeholder="https://instagram.com/jouw_naam">
+      <button onclick="updateQR()">Sla op</button>
+    </div>
+    <button class="btn btn-secondary" style="width:100%;" onclick="showScreen('end')">← Terug</button>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="screen" id="settings">
+  <div class="header">
+    <div>
+      <h1>Instellingen</h1>
+    </div>
+    <button class="btn btn-ghost" onclick="showScreen('gallery')">← Terug</button>
+  </div>
+  <div class="settings-scroll">
+    <div class="settings-section">
+      <div class="settings-label">Contact link</div>
+      <div class="settings-row">
+        <span class="settings-key">URL</span>
+        <input class="settings-input" id="settings-url" placeholder="instagram.com/..." oninput="saveSetting('qrUrl', this.value)">
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-label">Data</div>
+      <div class="settings-row" style="cursor:pointer;" onclick="resetStats()">
+        <span class="settings-key">Reset alle statistieken</span>
+        <span class="settings-val">→</span>
+      </div>
+      <div class="settings-row" style="cursor:pointer;margin-top:2px;" onclick="clearAll()">
+        <span class="settings-key" style="color:var(--dislike);">Verwijder alle foto's & data</span>
+        <span class="settings-val">→</span>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-label">App info</div>
+      <div class="settings-row">
+        <span class="settings-key">Versie</span>
+        <span class="settings-val">1.0 MVP</span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-key">Opslag</span>
+        <span class="settings-val" id="storage-info">Berekenen...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- QR LIB -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  photos: [],      // { id, dataUrl, likes, dislikes }
+  session: null,   // { order: [ids], index: 0, sessionLikes, sessionDislikes }
+  qrUrl: 'https://instagram.com/'
+};
+
+// ============================================================
+// STORAGE
+// ============================================================
+function loadState() {
+  try {
+    const saved = localStorage.getItem('irl-swipe-v1');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state.photos = parsed.photos || [];
+      state.qrUrl = parsed.qrUrl || 'https://instagram.com/';
+    }
+  } catch(e) { console.warn('Load error', e); }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('irl-swipe-v1', JSON.stringify({
+      photos: state.photos,
+      qrUrl: state.qrUrl
+    }));
+  } catch(e) {
+    showToast('⚠ Opslag vol – verwijder wat foto\'s');
+  }
+}
+
+function saveSetting(key, val) {
+  state[key] = val;
+  saveState();
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'gallery') renderGallery();
+  if (id === 'qr') renderQR();
+  if (id === 'settings') renderSettings();
+}
+
+// ============================================================
+// GALLERY
+// ============================================================
+function renderGallery() {
+  const photos = state.photos;
+  const count = document.getElementById('photo-count');
+  const empty = document.getElementById('gallery-empty');
+  const grid = document.getElementById('photo-grid');
+  const startBtn = document.getElementById('start-btn');
+  const uploadBtn = document.getElementById('upload-btn');
+
+  count.textContent = photos.length === 1 ? '1 foto' : `${photos.length} foto's`;
+
+  if (photos.length === 0) {
+    empty.style.display = 'flex';
+    grid.style.display = 'none';
+    startBtn.style.display = 'none';
+    uploadBtn.style.flex = '1';
+  } else {
+    empty.style.display = 'none';
+    grid.style.display = 'grid';
+    startBtn.style.display = 'flex';
+    uploadBtn.style.flex = '0 0 auto';
+    uploadBtn.style.width = '44px';
+    uploadBtn.style.height = '44px';
+    uploadBtn.style.borderRadius = '50%';
+    uploadBtn.textContent = '+';
+    uploadBtn.style.padding = '0';
+    uploadBtn.className = 'btn btn-icon';
+
+    grid.innerHTML = photos.map(p => `
+      <div class="photo-cell fade-up" id="cell-${p.id}">
+        <img src="${p.dataUrl}" alt="foto" loading="lazy">
+        <div class="stats-overlay">
+          <span class="stat stat-like">♥ ${p.likes}</span>
+          <span class="stat stat-dislike">✕ ${p.dislikes}</span>
+        </div>
+        <button class="del-btn" onclick="deletePhoto('${p.id}', event)">×</button>
+      </div>
+    `).join('');
+  }
+
+  updateStorageInfo();
+}
+
+function updateStorageInfo() {
+  const el = document.getElementById('storage-info');
+  if (!el) return;
+  try {
+    const data = localStorage.getItem('irl-swipe-v1') || '';
+    const kb = Math.round(data.length * 2 / 1024);
+    el.textContent = kb > 1024 ? `${(kb/1024).toFixed(1)} MB` : `${kb} KB`;
+  } catch(e) {}
+}
+
+// FILE UPLOAD
+document.getElementById('file-input').addEventListener('change', async function(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+
+  for (const file of files) {
+    const dataUrl = await resizeImage(file, 800);
+    const photo = {
+      id: 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+      dataUrl,
+      likes: 0,
+      dislikes: 0
+    };
+    state.photos.push(photo);
+  }
+  saveState();
+  renderGallery();
+  this.value = '';
+  showToast(`${files.length} foto${files.length > 1 ? '\'s' : ''} toegevoegd`);
+});
+
+function resizeImage(file, maxSize) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > h && w > maxSize) { h = h * maxSize / w; w = maxSize; }
+      else if (h > maxSize) { w = w * maxSize / h; h = maxSize; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    img.src = url;
+  });
+}
+
+function deletePhoto(id, e) {
+  e.stopPropagation();
+  if (!confirm('Foto verwijderen?')) return;
+  state.photos = state.photos.filter(p => p.id !== id);
+  saveState();
+  renderGallery();
+}
+
+// ============================================================
+// SESSION / SWIPE
+// ============================================================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startSession() {
+  if (state.photos.length === 0) {
+    showToast('Upload eerst foto\'s!');
+    return;
+  }
+  const order = shuffle(state.photos.map(p => p.id));
+  state.session = { order, index: 0, sessionLikes: 0, sessionDislikes: 0 };
+  renderSwipe();
+  showScreen('swipe');
+}
+
+function renderSwipe() {
+  const stack = document.getElementById('card-stack');
+  stack.innerHTML = '';
+  if (!state.session) return;
+
+  const { order, index } = state.session;
+  if (index >= order.length) { endSession(); return; }
+
+  // Show current + next (for depth effect)
+  for (let i = Math.min(index + 1, order.length - 1); i >= index; i--) {
+    const photo = state.photos.find(p => p.id === order[i]);
+    if (!photo) continue;
+    const card = document.createElement('div');
+    card.className = 'swipe-card';
+    card.dataset.id = photo.id;
+    card.dataset.pos = i;
+    card.innerHTML = `
+      <img src="${photo.dataUrl}" alt="foto" draggable="false">
+      <div class="vote-overlay like"><span class="vote-badge">LIKE</span></div>
+      <div class="vote-overlay dislike"><span class="vote-badge">NOPE</span></div>
+    `;
+    if (i === index + 1) {
+      // Background card
+      card.style.transform = 'scale(0.95) translateY(12px)';
+      card.style.zIndex = '1';
+    } else {
+      // Top card
+      card.style.zIndex = '2';
+      initSwipeGestures(card);
+    }
+    stack.appendChild(card);
+  }
+
+  updateProgress();
+}
+
+function updateProgress() {
+  if (!state.session) return;
+  const { order, index } = state.session;
+  document.getElementById('swipe-progress').textContent = `${index + 1} / ${order.length}`;
+}
+
+// SWIPE GESTURES
+function initSwipeGestures(card) {
+  let startX = 0, startY = 0, dx = 0, dy = 0, dragging = false;
+  const likeOverlay = card.querySelector('.vote-overlay.like');
+  const dislikeOverlay = card.querySelector('.vote-overlay.dislike');
+
+  function onStart(x, y) {
+    startX = x; startY = y; dragging = true;
+    card.classList.add('is-dragging');
+  }
+  function onMove(x, y) {
+    if (!dragging) return;
+    dx = x - startX; dy = y - startY;
+    const rotate = dx * 0.08;
+    card.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotate}deg)`;
+    const progress = Math.min(Math.abs(dx) / 80, 1);
+    if (dx > 20) { likeOverlay.style.opacity = progress; dislikeOverlay.style.opacity = 0; }
+    else if (dx < -20) { dislikeOverlay.style.opacity = progress; likeOverlay.style.opacity = 0; }
+    else { likeOverlay.style.opacity = 0; dislikeOverlay.style.opacity = 0; }
+  }
+  function onEnd() {
+    if (!dragging) return;
+    dragging = false;
+    card.classList.remove('is-dragging');
+    likeOverlay.style.opacity = 0; dislikeOverlay.style.opacity = 0;
+
+    if (dy < -80) { endSession(); return; }
+    if (dx > 60) { doVote(card, 'like'); return; }
+    if (dx < -60) { doVote(card, 'dislike'); return; }
+    card.style.transform = '';
+  }
+
+  card.addEventListener('mousedown', e => onStart(e.clientX, e.clientY));
+  document.addEventListener('mousemove', e => { if (dragging) onMove(e.clientX, e.clientY); });
+  document.addEventListener('mouseup', () => onEnd());
+
+  card.addEventListener('touchstart', e => { const t = e.touches[0]; onStart(t.clientX, t.clientY); }, { passive: true });
+  card.addEventListener('touchmove', e => { const t = e.touches[0]; onMove(t.clientX, t.clientY); e.preventDefault(); }, { passive: false });
+  card.addEventListener('touchend', () => onEnd());
+}
+
+function doVote(card, type) {
+  if (!state.session) return;
+  const photoId = card.dataset.id;
+  const photo = state.photos.find(p => p.id === photoId);
+  if (!photo) return;
+
+  if (type === 'like') { photo.likes++; state.session.sessionLikes++; }
+  else { photo.dislikes++; state.session.sessionDislikes++; }
+  saveState();
+
+  const tx = type === 'like' ? 400 : -400;
+  const rot = type === 'like' ? 30 : -30;
+  card.classList.add('animate-out');
+  card.style.transform = `translate(${tx}px, -80px) rotate(${rot}deg)`;
+  card.style.opacity = '0';
+
+  state.session.index++;
+
+  setTimeout(() => {
+    if (!state.session || state.session.index >= state.session.order.length) {
+      endSession();
+    } else {
+      renderSwipe();
+    }
+  }, 350);
+}
+
+function triggerVote(type) {
+  const card = document.querySelector('#card-stack .swipe-card[style*="z-index: 2"], #card-stack .swipe-card:last-child');
+  if (card) doVote(card, type);
+}
+
+function endSession() {
+  if (!state.session) { showScreen('end'); return; }
+  const likes = state.session.sessionLikes;
+  const dislikes = state.session.sessionDislikes;
+  const total = likes + dislikes;
+
+  document.getElementById('end-likes').textContent = likes;
+  document.getElementById('end-dislikes').textContent = dislikes;
+  document.getElementById('end-subtitle').textContent = total === 0
+    ? 'Sessie beëindigd.'
+    : `${total} foto${total !== 1 ? '\'s' : ''} beoordeeld.`;
+
+  state.session = null;
+  showScreen('end');
+}
+
+// ============================================================
+// QR CODE
+// ============================================================
+let qrInstance = null;
+
+function renderQR() {
+  const url = state.qrUrl || 'https://instagram.com/';
+  document.getElementById('qr-url-input').value = url;
+
+  const canvas = document.getElementById('qr-canvas');
+  canvas.width = 200; canvas.height = 200;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, 200, 200);
+
+  // Use QRCode library
+  try {
+    const container = document.createElement('div');
+    container.style.display = 'none';
+    document.body.appendChild(container);
+    if (qrInstance) { container.innerHTML = ''; }
+    new QRCode(container, {
+      text: url,
+      width: 200,
+      height: 200,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    setTimeout(() => {
+      const img = container.querySelector('img') || container.querySelector('canvas');
+      if (img) {
+        if (img.tagName === 'IMG') {
+          const i = new Image();
+          i.onload = () => ctx.drawImage(i, 0, 0, 200, 200);
+          i.src = img.src;
+        } else {
+          ctx.drawImage(img, 0, 0, 200, 200);
+        }
+      }
+      document.body.removeChild(container);
+    }, 100);
+  } catch(e) {
+    // Fallback: draw text in canvas
+    ctx.fillStyle = '#000';
+    ctx.font = '12px monospace';
+    ctx.fillText('QR: ' + url.slice(0, 30), 10, 100);
+  }
+}
+
+function updateQR() {
+  const val = document.getElementById('qr-url-input').value.trim();
+  if (!val) return;
+  let url = val;
+  if (!url.startsWith('http')) url = 'https://' + url;
+  state.qrUrl = url;
+  saveState();
+  renderQR();
+  showToast('QR opgeslagen!');
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function renderSettings() {
+  document.getElementById('settings-url').value = state.qrUrl || '';
+  updateStorageInfo();
+}
+
+function resetStats() {
+  if (!confirm('Alle likes/dislikes resetten?')) return;
+  state.photos.forEach(p => { p.likes = 0; p.dislikes = 0; });
+  saveState();
+  showToast('Statistieken gereset');
+}
+
+function clearAll() {
+  if (!confirm('Alle foto\'s en data verwijderen? Dit kan niet ongedaan worden gemaakt.')) return;
+  state.photos = [];
+  state.session = null;
+  saveState();
+  renderGallery();
+  showToast('Alles verwijderd');
+  showScreen('gallery');
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+loadState();
+renderGallery();
+
+// Prevent default scroll on swipe screen
+document.getElementById('swipe').addEventListener('touchmove', e => {
+  if (e.target.closest('.card-stack')) e.preventDefault();
+}, { passive: false });
+
+// PWA Service Worker (inline)
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE = 'irl-swipe-v1';
+    self.addEventListener('install', e => {
+      self.skipWaiting();
+    });
+    self.addEventListener('fetch', e => {
+      e.respondWith(
+        caches.match(e.request).then(r => r || fetch(e.request).catch(() => new Response('', {status: 503})))
+      );
+    });
+  `;
+  const blob = new Blob([swCode], { type: 'application/javascript' });
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(() => {});
+}
+</script>
+</body>
+</html>

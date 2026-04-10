@@ -8,3 +8,11 @@ breng {? "een potloot", "een aansteker", "kegel" } mee
 {player} moet {? "rode", "gele" } kegel op zijn hooft zeten
 maak een piramide met iedereen!!! {player} moet vanboven
 zorg dat iedeen behalve {player:alive} in deb houding staat op het einde
+zorg dat iedereen met {? "1", "2" } handen op de grond zit op het einde van de ronde behalve {player:alive} en {player:alive}
+zorg dat {player:alive} over {player} en {player} sprint
+zorg dat de groep in een cirkel staat en allemaal naar {? "binnen", "buiten" } kijkt, en {player} doet een dansje in het midden
+{player} moet door {? "3", "4" } mensen tegelijk gedragen worden
+{player} moet op het einde van de ronde op zijn/haar knieën zitten met een golfbal in haar handen
+zorg dat iedereen tegelijk {? "klapt", "springt", "draait" }
+zorg dat iedereen behalve {player:alive} op de grond ligt
+{player:alive} moet door iedereen tegelijk aangeraakt worden

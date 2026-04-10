@@ -12,7 +12,6 @@ router = APIRouter()
 @router.post("/create", response_model=CreateGameResponse)
 def create_game(payload: CreateGameRequest):
     try:
-        print(payload)
         code = games.create_game(
             payload.players,
             payload.settings,

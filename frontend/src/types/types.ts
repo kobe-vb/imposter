@@ -14,7 +14,6 @@ export type Role = { name: string; count: number };
 
 export type GameSettings = {
   taskTemplate: string;
-  taskTime: number;
   infoDisplayTime: number;
   tasksPerRound: number;
 };
