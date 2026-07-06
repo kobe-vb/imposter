@@ -47,9 +47,9 @@ class Tasks:
         
         new_task: Optional[str] = self.formatter.format(random.choice(self.tasks), player)
         for _ in range(10):
-            new_task = self.formatter.format(random.choice(self.tasks), player)
             if new_task is not None:
                 break
+            new_task = self.formatter.format(random.choice(self.tasks), player)
         if new_task is None:
             new_task = "geen opdrachten gevonden"
         return new_task
